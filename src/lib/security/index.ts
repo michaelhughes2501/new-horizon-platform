@@ -79,11 +79,11 @@ export const clearSession = (): void => {
 export const sanitise = (input: unknown, maxLength = 2000): string => {
   if (typeof input !== 'string') return '';
   return input
-    .replace(/<[^>]*>/g, '')           // strip HTML tags
-    .replace(/javascript:/gi, '')       // strip JS URIs
-    .replace(/on\w+\s*=/gi, '')         // strip inline event handlers
-    .replace(/\0/g, '')                 // strip null bytes
-    .replace(/\s+/g, ' ')              // normalise whitespace
+    .replace(/<[^>]*>/g, '')                           // strip HTML tags
+    .replace(/(?:javascript|data|vbscript):/gi, '')   // strip executable URI schemes
+    .replace(/on\w+\s*=/gi, '')                        // strip inline event handlers
+    .replace(/\0/g, '')                                // strip null bytes
+    .replace(/\s+/g, ' ')                              // normalise whitespace
     .trim()
     .slice(0, maxLength);
 };
