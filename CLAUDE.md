@@ -45,115 +45,62 @@
 ## Directory Structure
 
 ```
-new-horizon/
+new-horizon-platform/
 │
 ├── CLAUDE.md                      ← You are here — AI context file
 ├── README.md                      ← Human-readable setup guide
+├── SECURITY.md                    ← Security reporting / policy
 ├── package.json
-├── tsconfig.json
+├── tsconfig.json                  ← strict mode + path aliases (@lib, @components, …)
 ├── vite.config.ts
+├── index.html                     ← Vite HTML entry
 ├── .env.example                   ← Copy to .env.local and fill in values
 │
 ├── src/
 │   ├── main.tsx                   ← React entry point
-│   ├── App.tsx                    ← Root component + router
+│   ├── App.tsx                    ← Router + ProtectedRoute / AdminRoute wrappers
 │   │
-│   ├── components/
-│   │   ├── ui/                    ← Shared primitive components
-│   │   │   ├── Avatar.tsx
-│   │   │   ├── Badge.tsx
-│   │   │   ├── Button.tsx
-│   │   │   ├── Modal.tsx
-│   │   │   ├── Toast.tsx
-│   │   │   ├── Spinner.tsx
-│   │   │   ├── SecurityBadge.tsx
-│   │   │   └── index.ts           ← Barrel export
-│   │   │
-│   │   ├── auth/
-│   │   │   ├── AuthPage.tsx       ← Login + Register
-│   │   │   ├── PasswordStrength.tsx
-│   │   │   └── ProtectedRoute.tsx
-│   │   │
-│   │   ├── layout/
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── TopBar.tsx
-│   │   │   └── AppLayout.tsx
-│   │   │
-│   │   └── features/
-│   │       ├── dashboard/         ← Dashboard page + widgets
-│   │       ├── connect/           ← Member discovery + like/connect
-│   │       ├── messages/          ← Real-time chat
-│   │       ├── jobs/              ← Job board + apply modal + saved jobs
-│   │       ├── resources/         ← Parole, mental health, housing, edu
-│   │       ├── blog/              ← Posts, comments, likes
-│   │       ├── calculator/        ← Sentence calculator
-│   │       └── profile/           ← Edit profile, privacy, account
-│   │
-│   ├── hooks/
-│   │   ├── useAuth.ts             ← Auth state + session
-│   │   ├── useProfile.ts          ← Current user profile operations
-│   │   ├── useConnections.ts      ← Connection CRUD
-│   │   ├── useMessages.ts         ← Real-time messaging
-│   │   ├── useNotifications.ts    ← Notification state
-│   │   ├── useJobs.ts             ← Job board queries
-│   │   └── useBlog.ts             ← Blog post queries
-│   │
-│   ├── lib/
-│   │   ├── security/
-│   │   │   ├── index.ts           ← Security module (hash, sanitise, rate-limit)
-│   │   │   ├── sanitise.ts        ← Input sanitisation + XSS prevention
-│   │   │   ├── rateLimit.ts       ← Client-side sliding-window rate limiter
-│   │   │   └── audit.ts           ← Audit event logging
-│   │   │
-│   │   ├── database/
-│   │   │   └── supabase.ts        ← Supabase client + typed query helpers
-│   │   │
-│   │   └── api/
-│   │       ├── auth.ts            ← Auth API wrapper
-│   │       ├── profiles.ts        ← Profile API wrapper
-│   │       ├── jobs.ts            ← Jobs API wrapper
-│   │       ├── blog.ts            ← Blog API wrapper
-│   │       └── notifications.ts   ← Notifications API wrapper
-│   │
-│   ├── types/
-│   │   ├── database.ts            ← Auto-generated Supabase types (do not edit)
-│   │   ├── app.ts                 ← Application-level types
-│   │   └── index.ts               ← Barrel export
-│   │
+│   ├── components/                ← Shared + feature components
 │   ├── context/
-│   │   ├── AuthContext.tsx        ← Auth state provider
+│   │   ├── AuthContext.tsx        ← Auth state provider. `useAuth` is exported FROM HERE
+│   │   │                            (not a separate hook file — don't recreate it).
 │   │   └── ToastContext.tsx       ← Global toast notifications
 │   │
+│   ├── lib/
+│   │   └── security/
+│   │       └── index.ts           ← Security module (sanitise, rate limit, password strength,
+│   │                                audit/event helpers — single file, not split).
+│   │
+│   ├── types/
+│   │   └── app.ts                 ← Application-level types
+│   │
 │   └── styles/
-│       ├── tokens.ts              ← Design tokens (colors, spacing, fonts)
-│       └── global.css             ← Global reset + base styles
+│       └── tokens.ts              ← Design tokens (colors, spacing, fonts)
 │
 ├── supabase/
-│   ├── migrations/
-│   │   └── 001_complete_schema.sql  ← SINGLE SOURCE OF TRUTH for DB
-│   │
-│   └── functions/
-│       ├── send-push-notification/
-│       │   └── index.ts           ← Expo push via Edge Function
-│       ├── moderate-content/
-│       │   └── index.ts           ← Content moderation endpoint
-│       └── match-algorithm/
-│           └── index.ts           ← Member matching logic
+│   └── migrations/
+│       └── 001_complete_schema.sql ← SINGLE SOURCE OF TRUTH for DB (~1.4k lines:
+│                                     tables, RLS, triggers, functions, seed roles)
 │
-├── public/
-│   ├── manifest.json              ← PWA manifest
-│   ├── sw-notifications.js        ← Web push service worker
-│   └── icons/                     ← App icons
-│
-├── docs/
-│   ├── SECURITY.md                ← Security architecture docs
-│   ├── API.md                     ← API reference
-│   └── DEPLOYMENT.md              ← Deploy guide
-│
-└── scripts/
-    ├── generate-types.sh          ← Regenerate Supabase TypeScript types
-    └── seed-dev.ts                ← Seed development database
+└── .github/workflows/
+    ├── codeql.yml                 ← CodeQL Advanced (JavaScript/TypeScript)
+    └── pysa.yml                   ← Pysa scanner (template — misconfigured for this TS project;
+                                     update or delete next time it's touched)
 ```
+
+> Earlier drafts of this file referenced a `src/hooks/` directory, `public/`,
+> `docs/`, and `scripts/` folders. **Those don't currently exist** in this repo
+> — keep this section accurate as new directories are added.
+
+### Path aliases (`tsconfig.json` + `vite.config.ts`)
+
+Use the configured aliases instead of long relative imports:
+
+- `@lib/...` → `src/lib/*`
+- `@components/...` → `src/components/*`
+- `@context/...` → `src/context/*`
+- `@types/...` → `src/types/*`
+- `@styles/...` → `src/styles/*`
 
 ---
 
@@ -449,8 +396,17 @@ Test files live next to their source files as `*.test.ts` or `*.test.tsx`.
 
 Critical test coverage required for:
 - `src/lib/security/` — all sanitisation and rate limiting functions
-- `src/lib/api/` — all API wrapper functions (mock Supabase)
+- Any future `src/lib/api/` wrappers (mock Supabase)
 - `supabase/migrations/` — schema verification via `pg_tap` (optional)
+
+## CI / static analysis
+
+`.github/workflows/`:
+
+- **`codeql.yml`** — CodeQL Advanced scan over JavaScript/TypeScript on push/PR.
+- **`pysa.yml`** — Pysa (Python static analyzer). This is currently a template file
+  that doesn't match a TypeScript project; either configure it for an actual
+  Python target or remove it.
 
 ---
 
