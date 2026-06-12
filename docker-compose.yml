@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: new-horizon-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_APP_URL=http://localhost:5173
+      - VITE_INTERNAL_SECRET=${VITE_INTERNAL_SECRET}
+      - VITE_VAPID_PUBLIC_KEY=${VITE_VAPID_PUBLIC_KEY}
+      - NODE_ENV=development
+    volumes:
+      # Source code mount for hot-reload
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - /app/node_modules  # Prevent node_modules from being overwritten
+    develop:
+      watch:
+        - path: ./src
+          action: sync
+        - path: ./public
+          action: sync
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - new-horizon
+
+  # Production setup with Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: new-horizon-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./dist:/usr/share/nginx/html:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro  # SSL certificates
+    depends_on:
+      - app
+    networks:
+      - new-horizon
+    profiles:
+      - production
+
+networks:
+  new-horizon:
+    driver: bridge
+
+volumes:
+  postgres_data:
