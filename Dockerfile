@@ -2,9 +2,9 @@
 # Stage 1: Dependencies (caching layer)
 FROM node:20-alpine AS deps
 WORKDIR /app
-RUN npm install -g pnpm
+RUN npm install -g npm@11.17.0 pnpm
 COPY package.json pnpm-lock.yaml* package-lock.json* ./
-RUN npm ci --frozen-lockfile || npm install
+RUN npm ci --frozen-lockfile --legacy-peer-deps || npm install --legacy-peer-deps
 
 # Stage 2: Build
 FROM node:20-alpine AS builder
