@@ -2,8 +2,7 @@
   "recommendations": [
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
-    "ms-vscode.vscode-typescript-next",
-    "supabase.vscode-supabase",
+"supabase.vscode-supabase",
     "bradlc.vscode-tailwindcss"
   ]
 }
