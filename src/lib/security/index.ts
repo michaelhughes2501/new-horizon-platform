@@ -84,7 +84,7 @@ export const sanitise = (input: unknown, maxLength = 2000): string => {
   do {
     prev = out;
     out = out
-      .replace(/<[^>]*>/g, '')                           // strip HTML tags
+      .replace(/[<>]/g, '')                             // strip HTML tag delimiters
       .replace(/(?:javascript|data|vbscript):/gi, '')   // strip executable URI schemes
       .replace(/on\w+\s*=/gi, '');                       // strip inline event handlers
   } while (out !== prev);
