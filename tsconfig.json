@@ -22,7 +22,7 @@
       "@components/*": ["src/components/*"],
       "@context/*": ["src/context/*"],
       "@styles/*": ["src/styles/*"],
-      "@types/*": ["src/types/*"]
+      "@apptypes/*": ["src/types/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

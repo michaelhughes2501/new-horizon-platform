@@ -14,7 +14,7 @@ import {
   EmptyState,
   inputStyle,
 } from '@components/ui';
-import type { PublicProfile } from '@types/app';
+import type { PublicProfile } from '@apptypes/app';
 
 const STATE_OPTIONS = ['All', 'TX', 'CA', 'FL', 'NY', 'GA', 'IL', 'OH', 'PA', 'NC', 'MI'];
 

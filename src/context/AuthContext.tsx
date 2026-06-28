@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { authApi, profileApi } from '@lib/api';
 import Security from '@lib/security';
-import type { Profile } from '@types/app';
+import type { Profile } from '@apptypes/app';
 
 interface AuthContextType {
   user:        Profile | null;

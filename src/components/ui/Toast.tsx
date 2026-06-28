@@ -1,7 +1,7 @@
 // src/components/ui/Toast.tsx
 import React from 'react';
 import { C } from '@styles/tokens';
-import type { ToastMessage, ToastType } from '@types/app';
+import type { ToastMessage, ToastType } from '@apptypes/app';
 
 const STYLE: Record<ToastType, { bg: string; icon: string }> = {
   success: { bg: C.success, icon: '✓' },

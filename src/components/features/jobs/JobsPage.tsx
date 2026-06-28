@@ -15,7 +15,7 @@ import {
   Field,
   inputStyle,
 } from '@components/ui';
-import type { Job, JobApplicationForm } from '@types/app';
+import type { Job, JobApplicationForm } from '@apptypes/app';
 
 const EMPTY_FORM: JobApplicationForm = { name: '', email: '', phone: '', intro: '' };
 

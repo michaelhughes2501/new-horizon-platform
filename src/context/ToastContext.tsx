@@ -1,6 +1,6 @@
 // src/context/ToastContext.tsx
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import type { ToastMessage, ToastType } from '@types/app';
+import type { ToastMessage, ToastType } from '@apptypes/app';
 
 interface ToastContextType {
   toasts:  ToastMessage[];

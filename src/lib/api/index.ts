@@ -12,7 +12,7 @@ import type {
   Resource, ResourceCategory, Connection,
   Conversation, Message, ApiResponse,
   ProfileFormData, JobApplicationForm,
-} from '@types/app';
+} from '@apptypes/app';
 
 // ════════════════════════════════════════════════════════════════
 // AUTH API
@@ -394,7 +394,7 @@ export const jobApi = {
     }
 
     // Increment view count
-    await supabase.rpc('fn_increment_job_applications', { p_job_id: jobId }).catch(() => {});
+    await Promise.resolve(supabase.rpc('fn_increment_job_applications', { p_job_id: jobId })).catch(() => {});
 
     return { data: data as JobApplication, error: null };
   },
@@ -579,7 +579,7 @@ export const calculatorApi = {
   },
 
   async saveResult(userId: string, input: Record<string, unknown>, result: Record<string, unknown>): Promise<void> {
-    await supabase.from('sentence_calculations').insert({
+    await Promise.resolve(supabase.from('sentence_calculations').insert({
       user_id:          userId,
       state:            input.state,
       sentence_years:   input.sentenceYears,
@@ -588,7 +588,7 @@ export const calculatorApi = {
       earliest_release: (result.earliestRelease as Date).toISOString().split('T')[0],
       latest_release:   (result.latestRelease as Date).toISOString().split('T')[0],
       pct_served:       result.percentServed,
-    }).catch(() => {});
+    })).catch(() => {});
   },
 };
 

@@ -5,7 +5,7 @@ import { profileApi } from '@lib/api';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
 import { Card, PageHeader, Avatar, Button, Field, inputStyle, Badge } from '@components/ui';
-import type { ProfileFormData } from '@types/app';
+import type { ProfileFormData } from '@apptypes/app';
 
 const STATES = ['TX', 'CA', 'FL', 'NY', 'GA', 'IL', 'OH', 'PA', 'NC', 'MI'];
 const OFFENSES = ['non-violent', 'violent', 'drug', 'financial', 'prefer_not_to_say'];

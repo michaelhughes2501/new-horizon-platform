@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { C, fonts } from '@styles/tokens';
 import { blogApi } from '@lib/api';
 import { Card, PageHeader, Badge, Spinner, EmptyState, Avatar } from '@components/ui';
-import type { BlogPost } from '@types/app';
+import type { BlogPost } from '@apptypes/app';
 
 const CATEGORIES = ['All', 'Stories', 'Advice', 'News', 'Wellness'];
 

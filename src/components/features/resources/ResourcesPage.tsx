@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { C, fonts } from '@styles/tokens';
 import { resourceApi } from '@lib/api';
 import { Card, PageHeader, Badge, Button, Spinner, EmptyState } from '@components/ui';
-import type { Resource, ResourceCategory } from '@types/app';
+import type { Resource, ResourceCategory } from '@apptypes/app';
 
 const CATEGORIES: { key: ResourceCategory; label: string; icon: string }[] = [
   { key: 'parole',     label: 'Parole & Probation', icon: '⚖' },

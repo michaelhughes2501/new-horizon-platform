@@ -6,7 +6,7 @@ import { subscribeToMessages } from '@lib/database/supabase';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
 import { Card, PageHeader, Spinner, EmptyState, Button, inputStyle } from '@components/ui';
-import type { Conversation, Message } from '@types/app';
+import type { Conversation, Message } from '@apptypes/app';
 
 export default function MessagesPage() {
   const { user } = useAuth();

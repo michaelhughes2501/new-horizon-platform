@@ -10,7 +10,7 @@ export default defineConfig({
       '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
       '@context': fileURLToPath(new URL('./src/context', import.meta.url)),
       '@styles': fileURLToPath(new URL('./src/styles', import.meta.url)),
-      '@types': fileURLToPath(new URL('./src/types', import.meta.url)),
+      '@apptypes': fileURLToPath(new URL('./src/types', import.meta.url)),
     },
   },
   server: {
