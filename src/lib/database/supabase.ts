@@ -119,6 +119,10 @@ export async function uploadAvatar(
   const ext  = file.name.split('.').pop();
   const path = `${userId}/avatar.${ext}`;
 
+  if (path.includes('..')) {
+    throw new Error('Invalid path');
+  }
+
   const { error: uploadError } = await supabase.storage
     .from('avatars')
     .upload(path, file, { upsert: true });
