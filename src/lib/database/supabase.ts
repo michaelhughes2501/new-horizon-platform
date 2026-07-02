@@ -25,11 +25,14 @@ if (!SUPABASE_CONFIGURED && typeof console !== 'undefined') {
 }
 
 // Fall back to safe placeholders so the module can still load in preview/demo mode.
+// We gate on SUPABASE_CONFIGURED rather than a plain `||` so a mistakenly-set
+// non-URL value (e.g. copying the anon key into the URL slot) still boots
+// instead of throwing `TypeError: Invalid URL` at module load.
 // Any auth/DB call will fail with a runtime error — components should render
 // their disconnected/empty states rather than crash the whole app.
 export const supabase: SupabaseClient = createClient(
-  SUPABASE_URL || 'https://placeholder.supabase.co',
-  SUPABASE_ANON || 'placeholder-anon-key',
+  SUPABASE_CONFIGURED ? (SUPABASE_URL as string) : 'https://placeholder.supabase.co',
+  SUPABASE_CONFIGURED ? (SUPABASE_ANON as string) : 'placeholder-anon-key',
   {
   auth: {
     autoRefreshToken:    true,
