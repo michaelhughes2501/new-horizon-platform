@@ -1,6 +1,6 @@
 // src/components/features/messages/MessagesPage.tsx
 import React, { useEffect, useState } from 'react';
-import { C, fonts } from '@styles/tokens';
+import { C } from '@styles/tokens';
 import { messageApi } from '@lib/api';
 import { subscribeToMessages } from '@lib/database/supabase';
 import { useAuth } from '@context/AuthContext';

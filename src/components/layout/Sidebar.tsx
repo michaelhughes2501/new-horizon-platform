@@ -74,7 +74,20 @@ export default function Sidebar() {
               background: isActive ? C.sidebarHover : 'transparent',
               fontWeight: isActive ? 500 : 400,
               borderLeft: isActive ? `3px solid ${C.gold}` : '3px solid transparent',
+              transition: 'background .12s ease, color .12s ease',
             })}
+            onMouseEnter={e => {
+              if (!e.currentTarget.classList.contains('active')) {
+                e.currentTarget.style.background = C.sidebarHover;
+                e.currentTarget.style.color = C.white;
+              }
+            }}
+            onMouseLeave={e => {
+              if (!e.currentTarget.classList.contains('active')) {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'rgba(255,255,255,.62)';
+              }
+            }}
           >
             <span style={{ width: 18, textAlign: 'center', color: C.gold }}>{item.icon}</span>
             {item.label}

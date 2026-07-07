@@ -98,7 +98,7 @@ export const sanitise = (input: unknown, maxLength = 2000): string => {
 
 // ── Email validation ──────────────────────────────────────────
 export const isValidEmail = (email: string): boolean =>
-  /^[a-zA-Z0-9._%+\-]{1,64}@[a-zA-Z0-9.\-]{1,253}\.[a-zA-Z]{2,}$/.test(
+  /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/.test(
     (email || '').trim()
   );
 
@@ -221,7 +221,7 @@ export const moderateContent = (text: string): ModerationResult => {
   // PII patterns
   if (/\b\d{3}-\d{2}-\d{4}\b/.test(text))
     flags.push('Possible SSN detected');
-  if (/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/.test(text))
+  if (/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/.test(text))
     flags.push('Possible credit card number detected');
 
   const action =
@@ -236,7 +236,7 @@ export const moderateContent = (text: string): ModerationResult => {
 export const scrubPII = (text: string): string =>
   text
     .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN REDACTED]')
-    .replace(/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/g, '[CARD REDACTED]');
+    .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[CARD REDACTED]');
 
 // ── URL safety check ──────────────────────────────────────────
 export const isSafeUrl = (url: string): boolean => {

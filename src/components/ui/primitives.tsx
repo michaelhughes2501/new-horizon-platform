@@ -1,7 +1,7 @@
 // src/components/ui/primitives.tsx
 // Shared inline-styled UI primitives. Import via @components/ui.
 import React, { ReactNode, CSSProperties } from 'react';
-import { C, fonts, avatarColors } from '@styles/tokens';
+import { C, fonts, avatarColors, shadows, radii } from '@styles/tokens';
 
 // ── Button ────────────────────────────────────────────────────
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -141,19 +141,42 @@ export function Spinner({ size = 28 }: { size?: number }) {
 export function Card({
   children,
   style,
+  hoverable = false,
 }: {
   children: ReactNode;
   style?: CSSProperties;
+  /** Lift + shadow on hover — use for cards that sit inside a Link/button. */
+  hoverable?: boolean;
 }) {
   return (
     <div
       style={{
         background: C.white,
         border: `1px solid ${C.mist}`,
-        borderRadius: 16,
+        borderRadius: radii.xl,
         padding: 20,
+        boxShadow: shadows.sm,
+        transition: 'transform .15s ease, box-shadow .15s ease, border-color .15s ease',
         ...style,
       }}
+      onMouseEnter={
+        hoverable
+          ? e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = shadows.lg;
+              e.currentTarget.style.borderColor = C.gold;
+            }
+          : undefined
+      }
+      onMouseLeave={
+        hoverable
+          ? e => {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = shadows.sm;
+              e.currentTarget.style.borderColor = C.mist;
+            }
+          : undefined
+      }
     >
       {children}
     </div>
