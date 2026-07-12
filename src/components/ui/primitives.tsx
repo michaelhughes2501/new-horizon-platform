@@ -1,6 +1,6 @@
 // src/components/ui/primitives.tsx
 // Shared inline-styled UI primitives. Import via @components/ui.
-import React, { ReactNode, CSSProperties } from 'react';
+import React, { ReactNode, CSSProperties, useState } from 'react';
 import { C, fonts, avatarColors, shadows, radii } from '@styles/tokens';
 
 // ── Button ────────────────────────────────────────────────────
@@ -148,6 +148,8 @@ export function Card({
   /** Lift + shadow on hover — use for cards that sit inside a Link/button. */
   hoverable?: boolean;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <div
       style={{
@@ -155,28 +157,14 @@ export function Card({
         border: `1px solid ${C.mist}`,
         borderRadius: radii.xl,
         padding: 20,
-        boxShadow: shadows.sm,
+        boxShadow: hoverable && isHovered ? shadows.lg : shadows.sm,
+        transform: hoverable && isHovered ? 'translateY(-2px)' : 'none',
+        borderColor: hoverable && isHovered ? C.gold : C.mist,
         transition: 'transform .15s ease, box-shadow .15s ease, border-color .15s ease',
         ...style,
       }}
-      onMouseEnter={
-        hoverable
-          ? e => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = shadows.lg;
-              e.currentTarget.style.borderColor = C.gold;
-            }
-          : undefined
-      }
-      onMouseLeave={
-        hoverable
-          ? e => {
-              e.currentTarget.style.transform = 'none';
-              e.currentTarget.style.boxShadow = shadows.sm;
-              e.currentTarget.style.borderColor = C.mist;
-            }
-          : undefined
-      }
+      onMouseEnter={hoverable ? () => setIsHovered(true) : undefined}
+      onMouseLeave={hoverable ? () => setIsHovered(false) : undefined}
     >
       {children}
     </div>
