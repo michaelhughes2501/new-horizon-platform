@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import { C } from '@styles/tokens';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import AIChatbot from '@components/AIChatbot';
 
 export default function AppLayout() {
   return (
@@ -15,6 +16,8 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      {/* Global AI support widget (harvested from ConvictConnect1) */}
+      <AIChatbot context="general" />
     </div>
   );
 }
