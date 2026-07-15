@@ -5,7 +5,7 @@ import { C, fonts } from '@styles/tokens';
 import { blogApi } from '@lib/api';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
-import { Card, PageHeader, Badge, Spinner, EmptyState, Avatar, Button, inputStyle } from '@components/ui';
+import { Card, PageHeader, Badge, Spinner, EmptyState, Avatar, Button, TextInput } from '@components/ui';
 import type { BlogPost, BlogComment } from '@apptypes/app';
 
 const CATEGORIES = ['All', 'Stories', 'Advice', 'News', 'Wellness'];
@@ -85,7 +85,23 @@ function BlogList() {
             <Link
               key={post.id}
               to={`/blog/${post.slug}`}
-              style={{ display: 'block' }}
+              style={{ display: 'block', outline: 'none' }}
+              onFocus={e => {
+                const card = e.currentTarget.firstElementChild as HTMLElement;
+                if (card) {
+                  card.style.transform = 'translateY(-2px)';
+                  card.style.boxShadow = '0 8px 24px rgba(0,0,0,.10)';
+                  card.style.borderColor = C.gold;
+                }
+              }}
+              onBlur={e => {
+                const card = e.currentTarget.firstElementChild as HTMLElement;
+                if (card) {
+                  card.style.transform = 'none';
+                  card.style.boxShadow = 'none';
+                  card.style.borderColor = C.mist;
+                }
+              }}
             >
               <Card
                 style={{
@@ -183,6 +199,8 @@ function BlogPostDetail({ slug }: { slug: string }) {
       blogApi.getLiked(user.id).then(likedIds => {
         if (active) setLiked(likedIds.includes(post.id));
       });
+    } else {
+      setLiked(false);
     }
     return () => { active = false; };
   }, [post, user]);
@@ -299,8 +317,8 @@ function BlogPostDetail({ slug }: { slug: string }) {
 
         {user ? (
           <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              style={{ ...inputStyle, flex: 1 }}
+            <TextInput
+              style={{ flex: 1 }}
               placeholder="Add a comment…"
               value={draft}
               maxLength={1000}

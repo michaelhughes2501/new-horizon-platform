@@ -40,12 +40,18 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!activeId) { setMessages([]); return; }
-    messageApi.getMessages(activeId).then(({ data }) => setMessages(data ?? []));
+    let active = true;
+    messageApi.getMessages(activeId).then(({ data }) => {
+      if (active) setMessages(data ?? []);
+    });
     if (user) messageApi.markRead(activeId, user.id).catch(() => {});
     const unsub = subscribeToMessages(activeId, msg => {
-      setMessages(prev => [...prev, msg as unknown as Message]);
+      if (active) setMessages(prev => [...prev, msg as unknown as Message]);
     });
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [activeId, user]);
 
   const send = async () => {
@@ -92,9 +98,12 @@ export default function MessagesPage() {
                     background: activeId === c.id ? C.cream : 'transparent',
                     cursor: 'pointer',
                     transition: 'background .12s ease',
+                    outline: 'none',
                   }}
                   onMouseEnter={e => { if (activeId !== c.id) e.currentTarget.style.background = C.ivory; }}
                   onMouseLeave={e => { if (activeId !== c.id) e.currentTarget.style.background = 'transparent'; }}
+                  onFocus={e => { if (activeId !== c.id) e.currentTarget.style.background = C.ivory; }}
+                  onBlur={e => { if (activeId !== c.id) e.currentTarget.style.background = 'transparent'; }}
                 >
                   <div style={{ fontWeight: 500, color: C.charcoal, fontSize: 14 }}>
                     {c.peer?.name ?? 'Conversation'}

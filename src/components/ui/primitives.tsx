@@ -63,7 +63,8 @@ export function Button({
       onMouseLeave={e => {
         e.currentTarget.style.filter = 'none';
         e.currentTarget.style.transform = 'none';
-        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.boxShadow =
+          document.activeElement === e.currentTarget ? `0 0 0 3px ${C.gold}33` : 'none';
       }}
       onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'translateY(0)'; }}
       onFocus={e => { if (!disabled) e.currentTarget.style.boxShadow = `0 0 0 3px ${C.gold}33`; }}
@@ -246,9 +247,12 @@ export function Modal({
               padding: 6,
               borderRadius: radii.full,
               transition: 'background .12s ease, color .12s ease',
+              outline: 'none',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = C.cream; e.currentTarget.style.color = C.charcoal; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.slate; }}
+            onFocus={e => { e.currentTarget.style.background = C.cream; e.currentTarget.style.color = C.charcoal; }}
+            onBlur={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.slate; }}
           >
             ×
           </button>

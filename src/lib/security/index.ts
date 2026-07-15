@@ -79,12 +79,15 @@ export const clearSession = (): void => {
 export const sanitise = (input: unknown, maxLength = 2000): string => {
   if (typeof input !== 'string') return '';
 
+  const tagPattern = /<[^>]*>/;
   let out = input;
   let prev: string;
   do {
     prev = out;
+    while (tagPattern.test(out)) {                       // strip whole HTML tags one at a time until none remain,
+      out = out.replace(tagPattern, '');                  // defeating the classic overlapping-tag bypass (e.g. "<scr<script>ipt>")
+    }
     out = out
-      .replace(/<[^>]*>/g, '')                           // strip whole HTML tags (was only stripping bare < > chars, leaving tag names/attrs as text)
       .replace(/(?:javascript|data|vbscript):/gi, '')   // strip executable URI schemes
       .replace(/on\w+\s*=/gi, '');                       // strip inline event handlers
   } while (out !== prev);
