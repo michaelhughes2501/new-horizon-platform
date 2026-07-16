@@ -1,7 +1,7 @@
 // src/components/layout/TopBar.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { C, fonts } from '@styles/tokens';
+import { C, fonts, shadows } from '@styles/tokens';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
 import { Avatar, Button } from '@components/ui';
@@ -24,6 +24,7 @@ export default function TopBar() {
         flexShrink: 0,
         background: C.white,
         borderBottom: `1px solid ${C.mist}`,
+        boxShadow: shadows.sm,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',

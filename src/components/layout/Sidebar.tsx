@@ -1,5 +1,5 @@
 // src/components/layout/Sidebar.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { C, fonts } from '@styles/tokens';
 import { useAuth } from '@context/AuthContext';
@@ -20,6 +20,34 @@ const NAV: NavItem[] = [
   { to: '/calculator', label: 'Calculator', icon: '∑' },
   { to: '/profile',    label: 'Profile',    icon: '●' },
 ];
+
+function SidebarLink({ item }: { item: NavItem }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <NavLink
+      to={item.to}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={({ isActive }) => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: 11,
+        padding: '10px 12px',
+        borderRadius: 10,
+        fontSize: 14,
+        color: isActive || isHovered ? C.white : 'rgba(255,255,255,.62)',
+        background: isActive || isHovered ? C.sidebarHover : 'transparent',
+        fontWeight: isActive ? 500 : 400,
+        borderLeft: isActive ? `3px solid ${C.gold}` : '3px solid transparent',
+        transition: 'background .12s ease, color .12s ease',
+      })}
+    >
+      <span style={{ width: 18, textAlign: 'center', color: C.gold }}>{item.icon}</span>
+      {item.label}
+    </NavLink>
+  );
+}
 
 export default function Sidebar() {
   const { user } = useAuth();
@@ -60,25 +88,7 @@ export default function Sidebar() {
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1 }}>
         {NAV.map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              gap: 11,
-              padding: '10px 12px',
-              borderRadius: 10,
-              fontSize: 14,
-              color: isActive ? C.white : 'rgba(255,255,255,.62)',
-              background: isActive ? C.sidebarHover : 'transparent',
-              fontWeight: isActive ? 500 : 400,
-              borderLeft: isActive ? `3px solid ${C.gold}` : '3px solid transparent',
-            })}
-          >
-            <span style={{ width: 18, textAlign: 'center', color: C.gold }}>{item.icon}</span>
-            {item.label}
-          </NavLink>
+          <SidebarLink key={item.to} item={item} />
         ))}
 
         {isAdmin && (

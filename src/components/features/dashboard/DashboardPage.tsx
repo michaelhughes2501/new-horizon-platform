@@ -58,8 +58,8 @@ export default function DashboardPage() {
         }}
       >
         {STATS.map(s => (
-          <Link key={s.label} to={s.to}>
-            <Card style={{ transition: 'border-color .15s ease' }}>
+          <Link key={s.label} to={s.to} style={{ textDecoration: 'none' }}>
+            <Card hoverable>
               <div style={{ fontSize: 22, marginBottom: 8, color: C.gold }}>{s.icon}</div>
               <div style={{ fontFamily: fonts.display, fontSize: 28, color: C.charcoal }}>
                 {s.value}
@@ -140,8 +140,8 @@ export default function DashboardPage() {
         }}
       >
         {QUICK.map(q => (
-          <Link key={q.to} to={q.to}>
-            <Card style={{ background: C.cream }}>
+          <Link key={q.to} to={q.to} style={{ textDecoration: 'none' }}>
+            <Card hoverable style={{ background: C.cream }}>
               <div style={{ fontWeight: 500, color: C.charcoal, marginBottom: 4 }}>{q.label}</div>
               <div style={{ fontSize: 12, color: C.slate }}>{q.desc}</div>
             </Card>

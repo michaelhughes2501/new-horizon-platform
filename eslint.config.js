@@ -6,6 +6,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
+  { ignores: ['dist'] },
   { ignores: ['dist', 'node_modules'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -19,6 +20,7 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
+      ...reactHooks.configs.recommended.rules,
       // Only the two long-standing hooks rules — this is a React 18 app,
       // not React Compiler, so the newer compiler-oriented rules bundled
       // into eslint-plugin-react-hooks v7's "recommended" preset (e.g.

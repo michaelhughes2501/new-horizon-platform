@@ -1,5 +1,7 @@
 // src/components/ui/primitives.tsx
 // Shared inline-styled UI primitives. Import via @components/ui.
+import React, { ReactNode, CSSProperties, useState } from 'react';
+import { C, fonts, avatarColors, shadows, radii } from '@styles/tokens';
 import React, { ReactNode, CSSProperties } from 'react';
 import { C, fonts, avatarColors, radii, shadows } from '@styles/tokens';
 
@@ -156,6 +158,12 @@ export function Spinner({ size = 28 }: { size?: number }) {
 export function Card({
   children,
   style,
+  hoverable = false,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  /** Lift + shadow on hover — use for cards that sit inside a Link/button. */
+  hoverable?: boolean;
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -166,6 +174,8 @@ export function Card({
   onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <div
       onClick={onClick}
@@ -176,10 +186,16 @@ export function Card({
         border: `1px solid ${C.mist}`,
         borderRadius: radii.xl,
         padding: 20,
+        boxShadow: hoverable && isHovered ? shadows.lg : shadows.sm,
+        transform: hoverable && isHovered ? 'translateY(-2px)' : 'none',
+        borderColor: hoverable && isHovered ? C.gold : C.mist,
+        transition: 'transform .15s ease, box-shadow .15s ease, border-color .15s ease',
         boxShadow: shadows.sm,
         transition: 'box-shadow .15s ease, border-color .15s ease, transform .15s ease',
         ...style,
       }}
+      onMouseEnter={hoverable ? () => setIsHovered(true) : undefined}
+      onMouseLeave={hoverable ? () => setIsHovered(false) : undefined}
     >
       {children}
     </div>
