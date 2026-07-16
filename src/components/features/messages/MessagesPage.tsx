@@ -1,5 +1,6 @@
 // src/components/features/messages/MessagesPage.tsx
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { C } from '@styles/tokens';
 import { messageApi } from '@lib/api';
 import { subscribeToMessages } from '@lib/database/supabase';
@@ -11,15 +12,18 @@ import type { Conversation, Message } from '@apptypes/app';
 export default function MessagesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { id: activeId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
 
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft]       = useState('');
   const [sending, setSending]   = useState(false);
+
+  const openConversation = (id: string) => navigate(`/messages/${id}`);
 
   useEffect(() => {
     if (!user) return;
@@ -35,13 +39,20 @@ export default function MessagesPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!activeId) return;
-    messageApi.getMessages(activeId).then(({ data }) => setMessages(data ?? []));
-    const unsub = subscribeToMessages(activeId, msg => {
-      setMessages(prev => [...prev, msg as unknown as Message]);
+    if (!activeId) { setMessages([]); return; }
+    let active = true;
+    messageApi.getMessages(activeId).then(({ data }) => {
+      if (active) setMessages(data ?? []);
     });
-    return unsub;
-  }, [activeId]);
+    if (user) messageApi.markRead(activeId, user.id).catch(() => {});
+    const unsub = subscribeToMessages(activeId, msg => {
+      if (active) setMessages(prev => [...prev, msg as unknown as Message]);
+    });
+    return () => {
+      active = false;
+      unsub();
+    };
+  }, [activeId, user]);
 
   const send = async () => {
     if (!user || !activeId || !draft.trim()) return;
@@ -78,14 +89,21 @@ export default function MessagesPage() {
               conversations.map(c => (
                 <button
                   key={c.id}
-                  onClick={() => setActiveId(c.id)}
+                  onClick={() => openConversation(c.id)}
                   style={{
                     width: '100%',
                     textAlign: 'left',
                     padding: 12,
                     borderRadius: 10,
                     background: activeId === c.id ? C.cream : 'transparent',
+                    cursor: 'pointer',
+                    transition: 'background .12s ease',
+                    outline: 'none',
                   }}
+                  onMouseEnter={e => { if (activeId !== c.id) e.currentTarget.style.background = C.ivory; }}
+                  onMouseLeave={e => { if (activeId !== c.id) e.currentTarget.style.background = 'transparent'; }}
+                  onFocus={e => { if (activeId !== c.id) e.currentTarget.style.background = C.ivory; }}
+                  onBlur={e => { if (activeId !== c.id) e.currentTarget.style.background = 'transparent'; }}
                 >
                   <div style={{ fontWeight: 500, color: C.charcoal, fontSize: 14 }}>
                     {c.peer?.name ?? 'Conversation'}

@@ -54,7 +54,7 @@ export const storeSession = (userId: string, token: string): void => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
       userId, token, ts: Date.now(),
     }));
-  } catch (_) { /* storage unavailable */ }
+  } catch { /* storage unavailable */ }
 };
 
 export const loadSession = (): { userId: string; token: string } | null => {
@@ -72,19 +72,22 @@ export const loadSession = (): { userId: string; token: string } | null => {
 };
 
 export const clearSession = (): void => {
-  try { sessionStorage.removeItem(SESSION_KEY); } catch (_) { /* ignore */ }
+  try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
 };
 
 // ── Input sanitisation ────────────────────────────────────────
 export const sanitise = (input: unknown, maxLength = 2000): string => {
   if (typeof input !== 'string') return '';
 
+  const tagPattern = /<[^>]*>/;
   let out = input;
   let prev: string;
   do {
     prev = out;
+    while (tagPattern.test(out)) {                       // strip whole HTML tags one at a time until none remain,
+      out = out.replace(tagPattern, '');                  // defeating the classic overlapping-tag bypass (e.g. "<scr<script>ipt>")
+    }
     out = out
-      .replace(/[<>]/g, '')                             // strip HTML tag delimiters
       .replace(/(?:javascript|data|vbscript):/gi, '')   // strip executable URI schemes
       .replace(/on\w+\s*=/gi, '');                       // strip inline event handlers
   } while (out !== prev);

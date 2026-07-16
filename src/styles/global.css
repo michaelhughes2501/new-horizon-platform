@@ -97,3 +97,19 @@ ol {
 ::-webkit-scrollbar-thumb:hover {
   background: #d4cdbf;
 }
+
+/* ── Responsive: auth page stacks vertically on narrow viewports ── */
+@media (max-width: 760px) {
+  .auth-shell {
+    flex-direction: column;
+    min-height: auto !important;
+  }
+  .auth-brand {
+    padding: 48px 28px !important;
+    flex: none !important;
+  }
+  .auth-form {
+    width: 100% !important;
+    padding: 32px 28px !important;
+  }
+}

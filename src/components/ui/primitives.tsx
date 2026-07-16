@@ -2,6 +2,8 @@
 // Shared inline-styled UI primitives. Import via @components/ui.
 import React, { ReactNode, CSSProperties, useState } from 'react';
 import { C, fonts, avatarColors, shadows, radii } from '@styles/tokens';
+import React, { ReactNode, CSSProperties } from 'react';
+import { C, fonts, avatarColors, radii, shadows } from '@styles/tokens';
 
 // ── Button ────────────────────────────────────────────────────
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -33,11 +35,11 @@ export function Button({
     fontSize,
     fontFamily: fonts.body,
     fontWeight: 500,
-    borderRadius: 10,
+    borderRadius: radii.md,
     width: fullWidth ? '100%' : undefined,
     opacity: disabled ? 0.55 : 1,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'transform .12s ease, filter .12s ease',
+    transition: 'transform .12s ease, filter .12s ease, box-shadow .12s ease',
     border: '1px solid transparent',
   };
 
@@ -54,8 +56,21 @@ export function Button({
       disabled={disabled}
       onClick={onClick}
       style={{ ...base, ...variants[variant], ...style }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.filter = 'brightness(1.06)'; }}
-      onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}
+      onMouseEnter={e => {
+        if (disabled) return;
+        e.currentTarget.style.filter = 'brightness(1.06)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+        e.currentTarget.style.boxShadow = shadows.sm;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.filter = 'none';
+        e.currentTarget.style.transform = 'none';
+        e.currentTarget.style.boxShadow =
+          document.activeElement === e.currentTarget ? `0 0 0 3px ${C.gold}33` : 'none';
+      }}
+      onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'translateY(0)'; }}
+      onFocus={e => { if (!disabled) e.currentTarget.style.boxShadow = `0 0 0 3px ${C.gold}33`; }}
+      onBlur={e => { e.currentTarget.style.boxShadow = 'none'; }}
     >
       {children}
     </button>
@@ -109,11 +124,13 @@ export function Badge({
         alignItems: 'center',
         gap: 4,
         padding: '3px 9px',
-        borderRadius: 9999,
+        borderRadius: radii.full,
         fontSize: 11,
         fontWeight: 500,
+        lineHeight: 1.6,
         background: `${color}1A`,
         color,
+        whiteSpace: 'nowrap',
       }}
     >
       {children}
@@ -147,11 +164,23 @@ export function Card({
   style?: CSSProperties;
   /** Lift + shadow on hover — use for cards that sit inside a Link/button. */
   hoverable?: boolean;
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       style={{
         background: C.white,
         border: `1px solid ${C.mist}`,
@@ -161,6 +190,8 @@ export function Card({
         transform: hoverable && isHovered ? 'translateY(-2px)' : 'none',
         borderColor: hoverable && isHovered ? C.gold : C.mist,
         transition: 'transform .15s ease, box-shadow .15s ease, border-color .15s ease',
+        boxShadow: shadows.sm,
+        transition: 'box-shadow .15s ease, border-color .15s ease, transform .15s ease',
         ...style,
       }}
       onMouseEnter={hoverable ? () => setIsHovered(true) : undefined}
@@ -196,17 +227,19 @@ export function Modal({
         justifyContent: 'center',
         zIndex: 9000,
         padding: 20,
+        animation: 'fadeIn .15s ease',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
           background: C.white,
-          borderRadius: 18,
+          borderRadius: radii['2xl'],
           width: '100%',
           maxWidth: 480,
           maxHeight: '88vh',
           overflowY: 'auto',
+          boxShadow: shadows['2xl'],
           animation: 'fadeIn .2s ease',
         }}
       >
@@ -222,7 +255,20 @@ export function Modal({
           <h3 style={{ fontFamily: fonts.display, fontSize: 21, color: C.charcoal }}>{title}</h3>
           <button
             onClick={onClose}
-            style={{ fontSize: 22, color: C.slate, lineHeight: 1, padding: 4 }}
+            aria-label="Close"
+            style={{
+              fontSize: 22,
+              color: C.slate,
+              lineHeight: 1,
+              padding: 6,
+              borderRadius: radii.full,
+              transition: 'background .12s ease, color .12s ease',
+              outline: 'none',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.cream; e.currentTarget.style.color = C.charcoal; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.slate; }}
+            onFocus={e => { e.currentTarget.style.background = C.cream; e.currentTarget.style.color = C.charcoal; }}
+            onBlur={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.slate; }}
           >
             ×
           </button>
@@ -317,9 +363,57 @@ export function Field({
 export const inputStyle: CSSProperties = {
   width: '100%',
   padding: '11px 13px',
-  borderRadius: 10,
+  borderRadius: radii.md,
   border: `1px solid ${C.mist}`,
   background: C.ivory,
   color: C.charcoal,
   outline: 'none',
+  fontFamily: fonts.body,
+  transition: 'border-color .12s ease, box-shadow .12s ease',
 };
+
+// Apply alongside `inputStyle` (spread order matters — see components using it)
+// via onFocus/onBlur handlers, e.g.:
+//   onFocus={e => Object.assign(e.currentTarget.style, focusRingStyle)}
+//   onBlur={e => Object.assign(e.currentTarget.style, blurRingStyle)}
+export const focusRingStyle: CSSProperties = {
+  borderColor: C.gold,
+  boxShadow: `0 0 0 3px ${C.gold}26`,
+};
+export const blurRingStyle: CSSProperties = {
+  borderColor: C.mist,
+  boxShadow: 'none',
+};
+
+// ── TextInput / TextArea ─────────────────────────────────────────
+// Same visual language as `inputStyle`, with a built-in gold focus ring —
+// prefer these over a raw `<input style={inputStyle}>` in new form code.
+type TextInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'style'> & {
+  style?: CSSProperties;
+};
+
+export function TextInput({ style, onFocus, onBlur, ...rest }: TextInputProps) {
+  return (
+    <input
+      style={{ ...inputStyle, ...style }}
+      onFocus={e => { Object.assign(e.currentTarget.style, focusRingStyle); onFocus?.(e); }}
+      onBlur={e => { Object.assign(e.currentTarget.style, blurRingStyle); onBlur?.(e); }}
+      {...rest}
+    />
+  );
+}
+
+type TextAreaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'style'> & {
+  style?: CSSProperties;
+};
+
+export function TextArea({ style, onFocus, onBlur, ...rest }: TextAreaProps) {
+  return (
+    <textarea
+      style={{ ...inputStyle, minHeight: 90, resize: 'vertical', ...style }}
+      onFocus={e => { Object.assign(e.currentTarget.style, focusRingStyle); onFocus?.(e); }}
+      onBlur={e => { Object.assign(e.currentTarget.style, blurRingStyle); onBlur?.(e); }}
+      {...rest}
+    />
+  );
+}
