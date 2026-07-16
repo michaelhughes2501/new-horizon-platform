@@ -393,8 +393,9 @@ export const jobApi = {
       return { data: null, error: error.message };
     }
 
-    // Increment view count
-    await Promise.resolve(supabase.rpc('fn_increment_job_applications', { p_job_id: jobId })).catch(() => {});
+    // Note: applications_count is incremented automatically by the
+    // trg_job_application_count trigger (fn_increment_job_applications)
+    // on this INSERT — no separate RPC call is needed here.
 
     return { data: data as JobApplication, error: null };
   },
@@ -425,6 +426,18 @@ export const blogApi = {
     const { data, error } = await query.order('published_at', { ascending: false });
     if (error) return { data: null, error: error.message };
     return { data: data as BlogPost[], error: null };
+  },
+
+  async getBySlug(slug: string): Promise<ApiResponse<BlogPost>> {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*, author:profiles!author_id(id,name,avatar_initials,is_verified)')
+      .eq('slug', slug)
+      .eq('is_published', true)
+      .eq('is_flagged', false)
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: data as BlogPost, error: null };
   },
 
   async getComments(postId: string): Promise<ApiResponse<BlogComment[]>> {

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { C, fonts } from '@styles/tokens';
 import { calculatorApi } from '@lib/api';
+import { useAuth } from '@context/AuthContext';
 import { Card, PageHeader, Button, Field, inputStyle, Badge } from '@components/ui';
 
 const STATES = Object.keys(calculatorApi.SENTENCING_RULES);
@@ -13,6 +14,7 @@ function fmtDate(d: Date): string {
 }
 
 export default function CalculatorPage() {
+  const { user } = useAuth();
   const [state, setState]     = useState(STATES[0]);
   const [years, setYears]     = useState('5');
   const [offense, setOffense] = useState<'non-violent' | 'violent'>('non-violent');
@@ -35,6 +37,15 @@ export default function CalculatorPage() {
       return;
     }
     setResult(r);
+
+    // Audit log — only for signed-in users, best-effort (never blocks the UI).
+    if (user) {
+      calculatorApi.saveResult(
+        user.id,
+        { state, sentenceYears: y, offenseType: offense, startDate: start },
+        r
+      );
+    }
   };
 
   return (

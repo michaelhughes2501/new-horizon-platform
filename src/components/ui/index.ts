@@ -11,4 +11,8 @@ export {
   PageHeader,
   Field,
   inputStyle,
+  focusRingStyle,
+  blurRingStyle,
+  TextInput,
+  TextArea,
 } from './primitives';
