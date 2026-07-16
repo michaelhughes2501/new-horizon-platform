@@ -54,7 +54,7 @@ export const storeSession = (userId: string, token: string): void => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
       userId, token, ts: Date.now(),
     }));
-  } catch (_) { /* storage unavailable */ }
+  } catch { /* storage unavailable */ }
 };
 
 export const loadSession = (): { userId: string; token: string } | null => {
@@ -72,19 +72,22 @@ export const loadSession = (): { userId: string; token: string } | null => {
 };
 
 export const clearSession = (): void => {
-  try { sessionStorage.removeItem(SESSION_KEY); } catch (_) { /* ignore */ }
+  try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
 };
 
 // ── Input sanitisation ────────────────────────────────────────
 export const sanitise = (input: unknown, maxLength = 2000): string => {
   if (typeof input !== 'string') return '';
 
+  const tagPattern = /<[^>]*>/;
   let out = input;
   let prev: string;
   do {
     prev = out;
+    while (tagPattern.test(out)) {                       // strip whole HTML tags one at a time until none remain,
+      out = out.replace(tagPattern, '');                  // defeating the classic overlapping-tag bypass (e.g. "<scr<script>ipt>")
+    }
     out = out
-      .replace(/[<>]/g, '')                             // strip HTML tag delimiters
       .replace(/(?:javascript|data|vbscript):/gi, '')   // strip executable URI schemes
       .replace(/on\w+\s*=/gi, '');                       // strip inline event handlers
   } while (out !== prev);
@@ -98,7 +101,7 @@ export const sanitise = (input: unknown, maxLength = 2000): string => {
 
 // ── Email validation ──────────────────────────────────────────
 export const isValidEmail = (email: string): boolean =>
-  /^[a-zA-Z0-9._%+\-]{1,64}@[a-zA-Z0-9.\-]{1,253}\.[a-zA-Z]{2,}$/.test(
+  /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,}$/.test(
     (email || '').trim()
   );
 
@@ -221,7 +224,7 @@ export const moderateContent = (text: string): ModerationResult => {
   // PII patterns
   if (/\b\d{3}-\d{2}-\d{4}\b/.test(text))
     flags.push('Possible SSN detected');
-  if (/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/.test(text))
+  if (/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/.test(text))
     flags.push('Possible credit card number detected');
 
   const action =
@@ -236,7 +239,7 @@ export const moderateContent = (text: string): ModerationResult => {
 export const scrubPII = (text: string): string =>
   text
     .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN REDACTED]')
-    .replace(/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/g, '[CARD REDACTED]');
+    .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[CARD REDACTED]');
 
 // ── URL safety check ──────────────────────────────────────────
 export const isSafeUrl = (url: string): boolean => {

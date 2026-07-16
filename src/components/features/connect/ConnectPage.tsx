@@ -1,6 +1,6 @@
 // src/components/features/connect/ConnectPage.tsx
 import React, { useEffect, useState } from 'react';
-import { C, fonts } from '@styles/tokens';
+import { C } from '@styles/tokens';
 import { profileApi, connectionApi } from '@lib/api';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
