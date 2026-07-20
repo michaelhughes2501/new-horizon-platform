@@ -12,12 +12,9 @@ name: PR Agent
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
-  workflow_run:
-    workflows: ["Security & YAML Scan", "Dependency & Health Check", "Build Production"]
-    types: [completed]
+  workflow_dispatch: {}
   schedule:
     - cron: "0 7 * * 1"   # weekly Monday 07:00 UTC multi-repo sweep
-  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -80,6 +77,9 @@ jobs:
         env:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          REPO_OWNER_LOGIN: ${{ github.event.repository.owner.login }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           # Find the open PR whose head SHA matches the workflow_run.
@@ -108,14 +108,12 @@ jobs:
               "deletions": $dels
             },
             "repository": {
-              "name": "${{ github.event.repository.name }}",
-              "owner": {"login": "${{ github.event.repository.owner.login }}"}
+              "name": "$REPO_NAME",
+              "owner": {"login": "$REPO_OWNER_LOGIN"}
             }
           }
           JSON
           echo "skip=false" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run PR agent (aggregated verdict)
         if: steps.payload.outputs.skip != 'true'
