@@ -1021,6 +1021,7 @@ ALTER TABLE reports             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sentence_calculations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE security_events     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_audit_log     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rate_limit_log      ENABLE ROW LEVEL SECURITY;
 
 -- ── profiles ──────────────────────────────────────────────────
 DROP POLICY IF EXISTS "profiles_select_public"  ON profiles;
@@ -1275,6 +1276,12 @@ CREATE POLICY "audit_no_update" ON admin_audit_log
   FOR UPDATE USING (FALSE);
 CREATE POLICY "audit_no_delete" ON admin_audit_log
   FOR DELETE USING (FALSE);
+
+-- ── rate_limit_log ────────────────────────────────────────────
+-- Intentionally has zero policies: RLS is enabled above with no grants,
+-- so anon/authenticated roles get default-deny on every operation.
+-- The only writer/reader is fn_check_rate_limit(), a SECURITY DEFINER
+-- function that runs with the owning role's privileges and bypasses RLS.
 
 -- ════════════════════════════════════════════════════════════════
 -- SECTION 19 — REALTIME SUBSCRIPTIONS
