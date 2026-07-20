@@ -5,18 +5,35 @@
 // ─────────────────────────────────────────────────────────────
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 
-const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL  as string;
-const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL  as string | undefined;
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-if (!SUPABASE_URL || !SUPABASE_ANON) {
-  throw new Error(
-    'Missing Supabase environment variables.\n' +
-    'Copy .env.example → .env.local and fill in your project values.'
+const PLACEHOLDERS = new Set(['', 'https://your-project.supabase.co', 'your-anon-key']);
+
+export const SUPABASE_CONFIGURED =
+  Boolean(SUPABASE_URL) &&
+  Boolean(SUPABASE_ANON) &&
+  !PLACEHOLDERS.has(SUPABASE_URL as string) &&
+  !PLACEHOLDERS.has(SUPABASE_ANON as string);
+
+if (!SUPABASE_CONFIGURED && typeof console !== 'undefined') {
+  console.warn(
+    '[new-horizon] Supabase env vars missing. ' +
+    'Copy .env.example → .env.local and fill in your project values. ' +
+    'Auth and DB writes will fail until configured.'
   );
 }
 
-// ── Singleton client ──────────────────────────────────────────
-export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
+// Fall back to safe placeholders so the module can still load in preview/demo mode.
+// We gate on SUPABASE_CONFIGURED rather than a plain `||` so a mistakenly-set
+// non-URL value (e.g. copying the anon key into the URL slot) still boots
+// instead of throwing `TypeError: Invalid URL` at module load.
+// Any auth/DB call will fail with a runtime error — components should render
+// their disconnected/empty states rather than crash the whole app.
+export const supabase: SupabaseClient = createClient(
+  SUPABASE_CONFIGURED ? (SUPABASE_URL as string) : 'https://placeholder.supabase.co',
+  SUPABASE_CONFIGURED ? (SUPABASE_ANON as string) : 'placeholder-anon-key',
+  {
   auth: {
     autoRefreshToken:    true,
     persistSession:      true,

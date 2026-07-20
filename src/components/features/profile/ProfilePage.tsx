@@ -4,7 +4,7 @@ import { C, fonts } from '@styles/tokens';
 import { profileApi } from '@lib/api';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
-import { Card, PageHeader, Avatar, Button, Field, inputStyle, Badge } from '@components/ui';
+import { Card, PageHeader, Avatar, Button, Field, TextInput, TextArea, inputStyle, Badge } from '@components/ui';
 import type { ProfileFormData } from '@apptypes/app';
 
 const STATES = ['TX', 'CA', 'FL', 'NY', 'GA', 'IL', 'OH', 'PA', 'NC', 'MI'];
@@ -64,13 +64,12 @@ export default function ProfilePage() {
       </Card>
 
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
           <Field label="Name">
-            <input style={inputStyle} value={form.name} onChange={e => set('name', e.target.value)} />
+            <TextInput value={form.name} onChange={e => set('name', e.target.value)} />
           </Field>
           <Field label="Age">
-            <input
-              style={inputStyle}
+            <TextInput
               type="number"
               value={form.age}
               onChange={e => set('age', e.target.value)}
@@ -89,8 +88,7 @@ export default function ProfilePage() {
         </div>
 
         <Field label="Bio">
-          <textarea
-            style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }}
+          <TextArea
             value={form.bio}
             maxLength={500}
             onChange={e => set('bio', e.target.value)}
@@ -98,8 +96,7 @@ export default function ProfilePage() {
         </Field>
 
         <Field label="Interests (comma separated)">
-          <input
-            style={inputStyle}
+          <TextInput
             value={form.interests}
             onChange={e => set('interests', e.target.value)}
             placeholder="music, fitness, cooking"

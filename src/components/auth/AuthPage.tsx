@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { C, fonts } from '@styles/tokens';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
-import { Button, Field, inputStyle } from '@components/ui';
+import { Button, Field, TextInput } from '@components/ui';
 import Security from '@lib/security';
 
 type Mode = 'login' | 'register';
@@ -61,6 +61,7 @@ export default function AuthPage() {
 
   return (
     <div
+      className="auth-shell"
       style={{
         minHeight: '100vh',
         display: 'flex',
@@ -69,6 +70,7 @@ export default function AuthPage() {
     >
       {/* Brand panel */}
       <div
+        className="auth-brand"
         style={{
           flex: 1,
           display: 'flex',
@@ -115,6 +117,7 @@ export default function AuthPage() {
 
       {/* Form panel */}
       <div
+        className="auth-form"
         style={{
           width: 460,
           background: C.ivory,
@@ -148,8 +151,7 @@ export default function AuthPage() {
         <form onSubmit={submit}>
           {mode === 'register' && (
             <Field label="Full name">
-              <input
-                style={inputStyle}
+              <TextInput
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Jordan Rivera"
@@ -158,8 +160,7 @@ export default function AuthPage() {
           )}
 
           <Field label="Email">
-            <input
-              style={inputStyle}
+            <TextInput
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -168,8 +169,7 @@ export default function AuthPage() {
           </Field>
 
           <Field label="Password">
-            <input
-              style={inputStyle}
+            <TextInput
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -201,8 +201,7 @@ export default function AuthPage() {
 
           {mode === 'register' && (
             <Field label="Confirm password">
-              <input
-                style={inputStyle}
+              <TextInput
                 type="password"
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
