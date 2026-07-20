@@ -1,0 +1,53 @@
+name: CI
+
+# Real compile + test verification on every PR and push to main.
+#
+# This exists because `build-production.yml` only validates *config* on the
+# fast PR path (`--no-build`), so a source file that does not even parse can
+# merge cleanly. PR #17-20 did exactly that: src/components/ui/primitives.tsx
+# landed on main with duplicate imports and a doubled function signature.
+#
+# The `verify` job below is the one to mark as a required status check.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same PR cancels the older run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    env:
+      # Never let NODE_ENV=production reach npm here: it sets omit=dev, which
+      # silently skips devDependencies (typescript, vite, vitest) and makes the
+      # install look successful while the build tools are missing.
+      NODE_ENV: development
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
