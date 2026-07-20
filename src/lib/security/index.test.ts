@@ -47,39 +47,76 @@ describe('sanitise', () => {
     });
   });
 
-  // ── HTML tag stripping ───────────────────────────────────────
-  describe('HTML tag stripping', () => {
-    it('strips a simple opening and closing tag pair', () => {
-      expect(sanitise('<b>bold</b>')).toBe('bold');
+  // ── HTML tag neutralisation (angle-bracket removal) ──────────
+  //
+  // NOTE ON THE CONTRACT (updated after the CodeQL hardening):
+  // `sanitise` does NOT remove whole tag spans (the old `/<[^>]*>/g`
+  // approach). CodeQL flagged that as "incomplete multi-character
+  // sanitization" because a reconstructing payload such as
+  // `<scr<script>ipt>` survives a single pass. The implementation now
+  // strips every `<` and `>` character and loops to a fixpoint, so no
+  // tag can ever be formed or re-formed.
+  //
+  // The visible trade-off is that tag *names* survive as inert text:
+  // '<b>bold</b>' -> 'bbold/b'. That is intentional. The security
+  // invariant being defended is "no angle bracket survives", which each
+  // test below asserts explicitly alongside the exact output.
+  describe('HTML tag neutralisation (angle-bracket removal)', () => {
+    const expectNoAngleBrackets = (result: string) => {
+      expect(result).not.toContain('<');
+      expect(result).not.toContain('>');
+    };
+
+    it('neutralises a simple opening and closing tag pair, leaving inert text', () => {
+      const result = sanitise('<b>bold</b>');
+      expect(result).toBe('bbold/b');
+      expectNoAngleBrackets(result);
     });
 
-    it('strips a self-closing tag', () => {
-      expect(sanitise('<br/>')).toBe('');
+    it('neutralises a self-closing tag', () => {
+      const result = sanitise('<br/>');
+      expect(result).toBe('br/');
+      expectNoAngleBrackets(result);
     });
 
-    it('strips a tag with attributes', () => {
-      expect(sanitise('<a href="https://example.com">link</a>')).toBe('link');
+    it('neutralises a tag with attributes and preserves the non-executable href text', () => {
+      const result = sanitise('<a href="https://example.com">link</a>');
+      expect(result).toBe('a href="https://example.com"link/a');
+      expectNoAngleBrackets(result);
     });
 
-    it('strips multiple different tags', () => {
-      expect(sanitise('<p><strong>text</strong></p>')).toBe('text');
+    it('neutralises multiple different tags', () => {
+      const result = sanitise('<p><strong>text</strong></p>');
+      expect(result).toBe('pstrongtext/strong/p');
+      expectNoAngleBrackets(result);
     });
 
-    it('strips script tags and their content marker', () => {
-      // Tags are stripped but text nodes between tags remain
-      expect(sanitise('<script>alert(1)</script>')).toBe('alert(1)');
+    it('neutralises script tags so no executable element can form', () => {
+      const result = sanitise('<script>alert(1)</script>');
+      expect(result).toBe('scriptalert(1)/script');
+      expectNoAngleBrackets(result);
+      expect(result).not.toContain('<script');
     });
 
-    it('strips img tags', () => {
-      expect(sanitise('<img src="x" onerror="alert(1)">')).toBe('');
+    it('neutralises img tags and strips the inline error handler', () => {
+      const result = sanitise('<img src="x" onerror="alert(1)">');
+      // `onerror=` is removed by the event-handler rule, leaving the bare value.
+      expect(result).toBe('img src="x" "alert(1)"');
+      expectNoAngleBrackets(result);
+      expect(result).not.toMatch(/on\w+\s*=/i);
     });
 
-    it('strips a tag with no content', () => {
-      expect(sanitise('<div></div>')).toBe('');
+    it('neutralises a tag with no content', () => {
+      const result = sanitise('<div></div>');
+      expect(result).toBe('div/div');
+      expectNoAngleBrackets(result);
     });
 
     it('preserves text content between tags', () => {
-      expect(sanitise('Hello <b>world</b>!')).toBe('Hello world!');
+      const result = sanitise('Hello <b>world</b>!');
+      expect(result).toBe('Hello bworld/b!');
+      expectNoAngleBrackets(result);
+      expect(result).toContain('world');
     });
   });
 
@@ -98,8 +135,12 @@ describe('sanitise', () => {
     });
 
     it('strips data: scheme', () => {
-      // HTML tags are stripped first, then data: scheme — both in a single chain
-      expect(sanitise('data:text/html,<h1>XSS</h1>')).toBe('text/html,XSS');
+      // The scheme is removed and the angle brackets are stripped; the tag
+      // name survives as inert text (see the tag-neutralisation notes above).
+      const result = sanitise('data:text/html,<h1>XSS</h1>');
+      expect(result).toBe('text/html,h1XSS/h1');
+      expect(result).not.toContain('data:');
+      expect(result).not.toContain('<');
     });
 
     it('strips data: scheme (case-insensitive)', () => {
@@ -252,31 +293,39 @@ describe('sanitise', () => {
     });
   });
 
-  // ── Single-pass behaviour (regression for the PR change) ─────
-  // The refactored version is a single-pass replace chain.
-  // The old iterative loop handled nested/reconstructed injection patterns.
-  // These tests document the current single-pass behaviour.
-  describe('single-pass behaviour (post-refactor)', () => {
-    it('removes tags in a straightforward nested structure', () => {
-      // Single pass is sufficient for non-reconstructing nesting
-      const input = '<b><i>text</i></b>';
-      expect(sanitise(input)).toBe('text');
+  // ── Iterative (fixpoint) behaviour ───────────────────────────
+  // `sanitise` applies its replace chain inside a `do { ... } while (out !== prev)`
+  // loop, so stripping repeats until the string stops changing. Combined with
+  // removing every angle bracket, this is what closes the CodeQL
+  // "incomplete multi-character sanitization" finding: a payload cannot
+  // reconstruct a tag by hiding one inside another.
+  describe('iterative (fixpoint) behaviour', () => {
+    it('neutralises a straightforward nested structure', () => {
+      const result = sanitise('<b><i>text</i></b>');
+      expect(result).toBe('bitext/i/b');
+      expect(result).not.toContain('<');
+      expect(result).not.toContain('>');
     });
 
-    it('documents that a tag-reconstructing payload produces leftover chars in one pass', () => {
-      // The old iterative do-while loop would keep re-applying stripping until stable.
-      // The new single-pass approach applies each replace once in sequence.
-      // For '<scr<script>ipt>alert(1)</scr</script>ipt>':
-      // - The regex <[^>]*> greedily matches '<scr<script>' (from first < to first >), removing it.
-      // - Remaining: 'ipt>alert(1)</scr</script>ipt>'
-      // - Next match: '</scr</script>' is removed.
-      // - Remaining: 'ipt>alert(1)ipt>'
-      // The reconstructed tag is NOT preserved as <script>, but stray '>' chars and text fragments remain.
+    it('fully neutralises a tag-reconstructing payload (no leftover brackets)', () => {
+      // '<scr<script>ipt>' is the classic reconstruction payload: a naive
+      // single-pass `/<[^>]*>/g` removes the outer span and leaves fragments
+      // that re-form '<script>'. Because every '<' and '>' is removed and the
+      // loop runs to a fixpoint, nothing bracket-like can survive here.
       const input = '<scr<script>ipt>alert(1)</scr</script>ipt>';
       const result = sanitise(input);
-      expect(result).not.toContain('<script>');
-      // Stray fragments from the tag reconstruction survive in single-pass mode
-      expect(result).toContain('>');
+      expect(result).toBe('scrscriptiptalert(1)/scr/scriptipt');
+      expect(result).not.toContain('<');
+      expect(result).not.toContain('>');
+      expect(result).not.toContain('<script');
+    });
+
+    it('re-strips a scheme that is only revealed after an earlier removal', () => {
+      // 'javajavascript:script:' — removing the inner 'javascript:' re-forms
+      // another 'javascript:', which only a fixpoint loop will catch.
+      const result = sanitise('javajavascript:script:alert(1)');
+      expect(result).toBe('alert(1)');
+      expect(result.toLowerCase()).not.toContain('javascript:');
     });
 
     it('does not re-apply URI scheme removal after tag stripping', () => {
@@ -297,9 +346,10 @@ describe('sanitise', () => {
   // ── Boundary / negative cases ────────────────────────────────
   describe('boundary and negative cases', () => {
     it('handles a string with unmatched angle bracket sequences', () => {
-      // '<<<>>>' — regex <[^>]*> matches '<' then greedily takes '<<' (not '>') then '>',
-      // so '<<<>' is removed, leaving '>>' which has no further tag to strip.
-      expect(sanitise('<<<>>>')).toBe('>>');
+      // Every angle bracket is removed regardless of pairing, so an unmatched
+      // run collapses to nothing. (The old `/<[^>]*>/g` left '>>' behind here —
+      // exactly the kind of leftover that enabled tag reconstruction.)
+      expect(sanitise('<<<>>>')).toBe('');
     });
 
     it('handles a string with only null bytes', () => {
