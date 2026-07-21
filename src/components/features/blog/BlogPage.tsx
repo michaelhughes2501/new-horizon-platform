@@ -197,10 +197,11 @@ function BlogPostDetail({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (!post) return;
+    const postId = post.id;
     let active = true;
     async function load() {
       setCommentsLoading(true);
-      const { data, error } = await blogApi.getComments(post!.id);
+      const { data, error } = await blogApi.getComments(postId);
       if (!active) return;
       if (!error) setComments(data ?? []);
       setCommentsLoading(false);
@@ -209,7 +210,7 @@ function BlogPostDetail({ slug }: { slug: string }) {
     async function loadLiked() {
       if (!user) { setLiked(false); return; }
       const likedIds = await blogApi.getLiked(user.id);
-      if (active) setLiked(likedIds.includes(post!.id));
+      if (active) setLiked(likedIds.includes(postId));
     }
     loadLiked();
     return () => { active = false; };

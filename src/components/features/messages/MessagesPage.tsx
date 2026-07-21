@@ -27,10 +27,11 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!user) return;
+    const userId = user.id;
     let active = true;
     async function load() {
       setLoading(true);
-      const { data, error } = await messageApi.getConversations(user!.id);
+      const { data, error } = await messageApi.getConversations(userId);
       if (!active) return;
       if (error) setError(error);
       else { setError(null); setConversations(data ?? []); }
@@ -43,8 +44,7 @@ export default function MessagesPage() {
   useEffect(() => {
     let active = true;
     if (!activeId) {
-      async function clear() { setMessages([]); }
-      clear();
+      setMessages([]);
       return () => { active = false; };
     }
     messageApi.getMessages(activeId).then(({ data }) => {
