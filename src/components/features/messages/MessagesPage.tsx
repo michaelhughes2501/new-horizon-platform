@@ -6,7 +6,7 @@ import { messageApi } from '@lib/api';
 import { subscribeToMessages } from '@lib/database/supabase';
 import { useAuth } from '@context/AuthContext';
 import { useToast } from '@context/ToastContext';
-import { Card, PageHeader, Spinner, EmptyState, Button, inputStyle } from '@components/ui';
+import { Card, PageHeader, Spinner, EmptyState, Button, TextInput } from '@components/ui';
 import type { Conversation, Message } from '@apptypes/app';
 
 export default function MessagesPage() {
@@ -28,19 +28,25 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user) return;
     let active = true;
-    setLoading(true);
-    messageApi.getConversations(user.id).then(({ data, error }) => {
+    async function load() {
+      setLoading(true);
+      const { data, error } = await messageApi.getConversations(user!.id);
       if (!active) return;
       if (error) setError(error);
       else { setError(null); setConversations(data ?? []); }
       setLoading(false);
-    });
+    }
+    load();
     return () => { active = false; };
   }, [user]);
 
   useEffect(() => {
-    if (!activeId) { setMessages([]); return; }
     let active = true;
+    if (!activeId) {
+      async function clear() { setMessages([]); }
+      clear();
+      return () => { active = false; };
+    }
     messageApi.getMessages(activeId).then(({ data }) => {
       if (active) setMessages(data ?? []);
     });
@@ -97,13 +103,19 @@ export default function MessagesPage() {
                     borderRadius: 10,
                     background: activeId === c.id ? C.cream : 'transparent',
                     cursor: 'pointer',
-                    transition: 'background .12s ease',
+                    transition: 'background .12s ease, box-shadow .12s ease',
                     outline: 'none',
                   }}
                   onMouseEnter={e => { if (activeId !== c.id) e.currentTarget.style.background = C.ivory; }}
                   onMouseLeave={e => { if (activeId !== c.id) e.currentTarget.style.background = 'transparent'; }}
-                  onFocus={e => { if (activeId !== c.id) e.currentTarget.style.background = C.ivory; }}
-                  onBlur={e => { if (activeId !== c.id) e.currentTarget.style.background = 'transparent'; }}
+                  onFocus={e => {
+                    if (activeId !== c.id) e.currentTarget.style.background = C.ivory;
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${C.gold}33`;
+                  }}
+                  onBlur={e => {
+                    if (activeId !== c.id) e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                 >
                   <div style={{ fontWeight: 500, color: C.charcoal, fontSize: 14 }}>
                     {c.peer?.name ?? 'Conversation'}
@@ -159,8 +171,8 @@ export default function MessagesPage() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, padding: 12, borderTop: `1px solid ${C.mist}` }}>
-                  <input
-                    style={{ ...inputStyle, flex: 1 }}
+                  <TextInput
+                    style={{ flex: 1 }}
                     placeholder="Type a message…"
                     value={draft}
                     onChange={e => setDraft(e.target.value)}
