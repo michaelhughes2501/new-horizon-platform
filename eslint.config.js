@@ -20,12 +20,15 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
       // Only the two long-standing hooks rules — this is a React 18 app,
       // not React Compiler, so the newer compiler-oriented rules bundled
       // into eslint-plugin-react-hooks v7's "recommended" preset (e.g.
-      // set-state-in-effect, purity, gating) don't apply here and would
-      // flag idiomatic React 18 data-fetching patterns as errors.
+      // set-state-in-effect, purity, gating, immutability,
+      // preserve-manual-memoization) don't apply here and would flag
+      // idiomatic React 18 data-fetching patterns as errors. Deliberately
+      // NOT spreading `reactHooks.configs.recommended.rules` — that spread
+      // previously leaked the whole compiler rule suite in underneath
+      // these two overrides, contradicting this comment.
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': [
