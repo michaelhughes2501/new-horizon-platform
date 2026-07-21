@@ -103,10 +103,6 @@ export const MatchRecommendations: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchRecommendations();
-  }, []);
-
   const fetchRecommendations = async () => {
     try {
       const res = await fetch('/api/dashboard/ai/recommend-matches');
@@ -118,6 +114,10 @@ export const MatchRecommendations: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, []);
 
   const handleLike = async (userId: number) => {
     try {

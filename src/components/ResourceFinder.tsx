@@ -33,14 +33,6 @@ export const ResourceFinder: React.FC = () => {
   const [aiRecommendations, setAiRecommendations] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchResources();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [filters, resources]);
-
   const fetchResources = async () => {
     try {
       const res = await fetch('/api/resources');
@@ -93,6 +85,14 @@ export const ResourceFinder: React.FC = () => {
       generateAIRecommendations(filters.query);
     }
   };
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [filters, resources]);
 
   const generateAIRecommendations = async (query: string) => {
     try {

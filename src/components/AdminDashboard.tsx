@@ -31,11 +31,6 @@ export const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'overview' | 'users' | 'activity'>('overview');
 
-  useEffect(() => {
-    fetchStats();
-    fetchUsers();
-  }, []);
-
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/dashboard/stats');
@@ -57,6 +52,11 @@ export const AdminDashboard: React.FC = () => {
       console.error('Error fetching users:', error);
     }
   };
+
+  useEffect(() => {
+    fetchStats();
+    fetchUsers();
+  }, []);
 
   if (loading) {
     return <div className="p-8 text-center">Loading dashboard...</div>;
