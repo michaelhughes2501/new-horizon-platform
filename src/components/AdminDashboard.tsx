@@ -25,6 +25,13 @@ interface User {
   matches: number;
 }
 
+interface ActivityItem {
+  type: string;
+  user: string;
+  action: string;
+  timestamp: string;
+}
+
 export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -71,7 +78,7 @@ export const AdminDashboard: React.FC = () => {
         {['overview', 'users', 'activity'].map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t as any)}
+            onClick={() => setTab(t as 'overview' | 'users' | 'activity')}
             className={`px-4 py-2 font-semibold ${
               tab === t
                 ? 'border-b-2 border-blue-600 text-blue-600'
@@ -166,7 +173,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, trend }) => (
 );
 
 const ActivityFeed: React.FC = () => {
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
 
   useEffect(() => {
     const fetchActivity = async () => {
