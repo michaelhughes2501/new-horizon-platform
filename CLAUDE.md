@@ -84,13 +84,24 @@ new-horizon-platform/
 │
 └── .github/workflows/
     ├── codeql.yml                 ← CodeQL Advanced (JavaScript/TypeScript)
-    └── pysa.yml                   ← Pysa scanner (template — misconfigured for this TS project;
-                                     update or delete next time it's touched)
+    └── pysa.yml                   ← Pysa (Python static analyzer), now pointed at the repo's
+                                     own CI automation packages — see CI section below.
 ```
 
 > Earlier drafts of this file referenced a `src/hooks/` directory, `public/`,
 > `docs/`, and `scripts/` folders. **Those don't currently exist** in this repo
 > — keep this section accurate as new directories are added.
+>
+> **This tree is also missing real, already-committed top-level items**:
+> `buildagent/`, `depagent/`, `pragent/`, `scanner/` (the Python packages behind
+> the `build-production.yml` / `dependency-check.yml` / `pr-agent.yml` /
+> `security-scan.yml` workflows and the `agent-reports/*.json` they write),
+> plus `playground/`, `gateway/` (an API-gateway plugin that is **not** wired
+> into `vite.config.ts` — dead code as of this writing), `Dockerfile`,
+> `GATEWAY.md`, and stray `package.json.bak` / `package.json.plugin-v6` /
+> `package-lock (1).json` snapshots from the React 18→19 migration. None of
+> that is reflected above — reconcile this section (or delete the stale
+> artifacts) next time it's touched.
 
 ### Path aliases (`tsconfig.json` + `vite.config.ts`)
 
@@ -401,12 +412,23 @@ Critical test coverage required for:
 
 ## CI / static analysis
 
-`.github/workflows/`:
+`.github/workflows/` (this list was previously out of date — there are more
+workflows here than `codeql.yml`/`pysa.yml`; see each file for specifics):
 
-- **`codeql.yml`** — CodeQL Advanced scan over JavaScript/TypeScript on push/PR.
-- **`pysa.yml`** — Pysa (Python static analyzer). This is currently a template file
-  that doesn't match a TypeScript project; either configure it for an actual
-  Python target or remove it.
+- **`codeql.yml`** — CodeQL Advanced scan over JavaScript/TypeScript (+ Actions) on push/PR.
+- **`pysa.yml`** — Pysa (Python static analyzer). Previously a template that didn't
+  match this repo (no Python target, no `requirements.txt`). It's now pointed at
+  a real target: `buildagent/`, `depagent/`, `pragent/`, `scanner/` — the repo's
+  own build/dependency/PR/security automation packages, which are plain Python
+  (only external dep is PyYAML, pinned in the root `requirements.txt`). CodeQL
+  above only scans JS/TS + Actions, so Pysa is this repo's only static analysis
+  of that Python code.
+- **`build-production.yml`**, **`ci.yml`**, **`dependency-check.yml`**,
+  **`pr-agent.yml`**, **`security-scan.yml`** — the repo's home-grown build /
+  dependency-health / PR-review / security+YAML CI automation (Python, see
+  above); write their findings to `agent-reports/*.json`.
+- **`apisec-scan.yml`**, **`codacy.yml`**, **`defender-for-devops.yml`** — third-party
+  scanning integrations.
 
 ---
 

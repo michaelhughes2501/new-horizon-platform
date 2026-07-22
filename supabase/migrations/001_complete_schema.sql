@@ -955,7 +955,10 @@ SELECT
   p.id,
   p.name,
   p.state,
-  p.offense_type,
+  -- offense_type intentionally excluded: this view has no GRANT/REVOKE
+  -- restricting it to admin roles, so under Supabase's default PostgREST
+  -- exposure it would otherwise leak the private criminal-history field
+  -- to anon/authenticated callers (see CLAUDE.md "Sensitive Data Handling").
   p.interests,
   p.is_verified,
   p.profile_complete,
@@ -983,7 +986,11 @@ SELECT
   age,
   state,
   bio,
-  offense_type,
+  -- offense_type intentionally excluded — it is private and must never be
+  -- returned in a public/JOIN response (see CLAUDE.md: "Offense type is
+  -- private ... must never be included in public JOIN responses unless
+  -- explicitly queried by the owner"). Fetch it via profileApi.getById()
+  -- (the `profiles` table, gated by the owner-only RLS policy) instead.
   release_year,
   interests,
   is_verified,

@@ -74,7 +74,7 @@ export interface Profile {
 }
 
 export interface PublicProfile extends Omit<Profile,
-  'email' | 'is_banned' | 'role' | 'login_attempts'
+  'email' | 'is_banned' | 'role' | 'login_attempts' | 'offense_type'
 > {
   last_seen_label: string; // fuzzy: "Online" | "Recently active" etc.
 }

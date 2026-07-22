@@ -1,0 +1,8 @@
+# Runtime dependency for the repo's own CI automation (buildagent/, depagent/,
+# pragent/, scanner/ — see .github/workflows/*.yml). Everything else those
+# packages import is Python standard library.
+#
+# This file also makes .github/workflows/pysa.yml's `requirements-path:
+# 'requirements.txt'` point at a real target instead of a 404 — see CLAUDE.md's
+# CI TODO ("either configure it for an actual Python target or remove it").
+PyYAML>=6.0.1,<7

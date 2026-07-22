@@ -3,7 +3,7 @@
  * Search, filter, and AI-powered resource recommendations
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface Resource {
   id?: string;
@@ -33,14 +33,6 @@ export const ResourceFinder: React.FC = () => {
   const [aiRecommendations, setAiRecommendations] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchResources();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [filters, resources]);
-
   const fetchResources = async () => {
     try {
       const res = await fetch('/api/resources');
@@ -60,7 +52,25 @@ export const ResourceFinder: React.FC = () => {
     }
   };
 
-  const applyFilters = () => {
+  const generateAIRecommendations = useCallback(async (query: string) => {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `I'm looking for help with: ${query}. What resources would you recommend?`,
+          context: 'resources',
+        }),
+      });
+
+      const data = await res.json();
+      setAiRecommendations(data.reply);
+    } catch (error) {
+      console.error('Error generating recommendations:', error);
+    }
+  }, []);
+
+  const applyFilters = useCallback(() => {
     let filtered = resources;
 
     // Filter by query
@@ -92,25 +102,15 @@ export const ResourceFinder: React.FC = () => {
     if (filters.query) {
       generateAIRecommendations(filters.query);
     }
-  };
+  }, [resources, filters, generateAIRecommendations]);
 
-  const generateAIRecommendations = async (query: string) => {
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `I'm looking for help with: ${query}. What resources would you recommend?`,
-          context: 'resources',
-        }),
-      });
+  useEffect(() => {
+    fetchResources();
+  }, []);
 
-      const data = await res.json();
-      setAiRecommendations(data.reply);
-    } catch (error) {
-      console.error('Error generating recommendations:', error);
-    }
-  };
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const toggleTag = (tag: string) => {
     setFilters((prev) => ({
