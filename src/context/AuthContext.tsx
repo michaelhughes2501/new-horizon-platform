@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profileApi.updateLastSeen(user.id).catch(() => {});
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [user?.id]);
+  }, [user]);
 
   const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
     const { data, error } = await authApi.signIn(email, password);
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     const { data } = await profileApi.getById(user.id);
     if (data) setUser(data);
-  }, [user?.id]);
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, refreshUser }}>
