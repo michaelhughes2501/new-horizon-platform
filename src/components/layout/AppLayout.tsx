@@ -4,7 +4,13 @@ import { Outlet } from 'react-router-dom';
 import { C } from '@styles/tokens';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
-import AIChatbot from '@components/AIChatbot';
+
+// Note: AIChatbot (src/components/AIChatbot.tsx) was harvested from a different
+// project (ConvictConnect1) and was never adapted to this stack — it uses
+// Tailwind classNames (not installed here) and posts to a /api/chat endpoint
+// that doesn't exist in this Supabase-backed app, so it rendered unstyled and
+// non-functional on every authenticated page. Removed pending a real rewrite
+// against src/lib/api/ + design tokens.
 
 export default function AppLayout() {
   return (
@@ -16,8 +22,6 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-      {/* Global AI support widget (harvested from ConvictConnect1) */}
-      <AIChatbot context="general" />
     </div>
   );
 }

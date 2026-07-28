@@ -22,13 +22,15 @@ export default function ResourcesPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    resourceApi.getByCategory(category).then(({ data, error }) => {
+    async function load() {
+      setLoading(true);
+      const { data, error } = await resourceApi.getByCategory(category);
       if (!active) return;
       if (error) setError(error);
       else { setError(null); setResources(data ?? []); }
       setLoading(false);
-    });
+    }
+    load();
     return () => { active = false; };
   }, [category]);
 
@@ -55,7 +57,13 @@ export default function ResourcesPage() {
               border: `1px solid ${category === c.key ? C.gold : C.mist}`,
               background: category === c.key ? C.gold : C.white,
               color: category === c.key ? C.white : C.slate,
+              outline: 'none',
+              transition: 'border-color .12s ease, box-shadow .12s ease',
             }}
+            onMouseEnter={e => { if (category !== c.key) e.currentTarget.style.borderColor = C.gold; }}
+            onMouseLeave={e => { if (category !== c.key) e.currentTarget.style.borderColor = C.mist; }}
+            onFocus={e => { e.currentTarget.style.boxShadow = `0 0 0 3px ${C.gold}33`; }}
+            onBlur={e => { e.currentTarget.style.boxShadow = 'none'; }}
           >
             <span>{c.icon}</span>
             {c.label}

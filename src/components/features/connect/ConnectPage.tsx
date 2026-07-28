@@ -30,13 +30,15 @@ export default function ConnectPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    profileApi.getPublic({ state: stateFilter }).then(({ data, error }) => {
+    async function load() {
+      setLoading(true);
+      const { data, error } = await profileApi.getPublic({ state: stateFilter });
       if (!active) return;
       if (error) setError(error);
       else { setError(null); setProfiles(data ?? []); }
       setLoading(false);
-    });
+    }
+    load();
     return () => { active = false; };
   }, [stateFilter]);
 

@@ -24,13 +24,15 @@ function BlogList() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    blogApi.getPosts(category).then(({ data, error }) => {
+    async function load() {
+      setLoading(true);
+      const { data, error } = await blogApi.getPosts(category);
       if (!active) return;
       if (error) setError(error);
       else { setError(null); setPosts(data ?? []); }
       setLoading(false);
-    });
+    }
+    load();
     return () => { active = false; };
   }, [category]);
 
@@ -55,8 +57,13 @@ function BlogList() {
               background: category === c ? C.gold : C.white,
               color: category === c ? C.white : C.slate,
               cursor: 'pointer',
-              transition: 'border-color .15s ease, background .15s ease',
+              outline: 'none',
+              transition: 'border-color .15s ease, background .15s ease, box-shadow .12s ease',
             }}
+            onMouseEnter={e => { if (category !== c) e.currentTarget.style.borderColor = C.gold; }}
+            onMouseLeave={e => { if (category !== c) e.currentTarget.style.borderColor = C.mist; }}
+            onFocus={e => { e.currentTarget.style.boxShadow = `0 0 0 3px ${C.gold}33`; }}
+            onBlur={e => { e.currentTarget.style.boxShadow = 'none'; }}
           >
             {c}
           </button>
@@ -176,32 +183,36 @@ function BlogPostDetail({ slug }: { slug: string }) {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    blogApi.getBySlug(slug).then(({ data, error }) => {
+    async function load() {
+      setLoading(true);
+      const { data, error } = await blogApi.getBySlug(slug);
       if (!active) return;
       if (error) setError(error);
       else { setError(null); setPost(data); setLikesCount(data?.likes_count ?? 0); }
       setLoading(false);
-    });
+    }
+    load();
     return () => { active = false; };
   }, [slug]);
 
   useEffect(() => {
     if (!post) return;
+    const postId = post.id;
     let active = true;
-    setCommentsLoading(true);
-    blogApi.getComments(post.id).then(({ data, error }) => {
+    async function load() {
+      setCommentsLoading(true);
+      const { data, error } = await blogApi.getComments(postId);
       if (!active) return;
       if (!error) setComments(data ?? []);
       setCommentsLoading(false);
-    });
-    if (user) {
-      blogApi.getLiked(user.id).then(likedIds => {
-        if (active) setLiked(likedIds.includes(post.id));
-      });
-    } else {
-      setLiked(false);
     }
+    load();
+    async function loadLiked() {
+      if (!user) { setLiked(false); return; }
+      const likedIds = await blogApi.getLiked(user.id);
+      if (active) setLiked(likedIds.includes(postId));
+    }
+    loadLiked();
     return () => { active = false; };
   }, [post, user]);
 

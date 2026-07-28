@@ -21,11 +21,14 @@ const ProfilePage     = lazy(() => import('@components/features/profile/ProfileP
 const AdminPage       = lazy(() => import('@components/pages/AdminPage'));
 const NotFoundPage    = lazy(() => import('@components/pages/NotFoundPage'));
 
-// Harvested feature components (from ConvictConnect1 — Sprint 1 move A)
-const AdminDashboard       = lazy(() => import('@components/AdminDashboard'));
-const MatchRecommendations = lazy(() => import('@components/MatchRecommendations'));
-const ResourceFinder       = lazy(() => import('@components/ResourceFinder'));
-const NotificationCenter   = lazy(() => import('@components/NotificationCenter'));
+// Note: AdminDashboard, MatchRecommendations, ResourceFinder, NotificationCenter,
+// and AIChatbot were harvested from a different project (ConvictConnect1) and were
+// never adapted to this stack — they use Tailwind classNames (no Tailwind is
+// installed here) and call fetch()/WebSocket endpoints that don't exist in this
+// Supabase-backed app. They were wired into unreachable routes with no nav link,
+// so they've been unwired below rather than shipped as broken pages. The files
+// remain in src/components/ as reference only; adapt them onto the src/lib/api/
+// wrappers (and this project's design tokens) before reconnecting.
 
 // Apply Content Security Policy on load
 Security.applyCSP();
@@ -85,14 +88,10 @@ function AppRoutes() {
             <Route path="/messages/:id"  element={<MessagesPage />} />
             <Route path="/jobs"          element={<JobsPage />} />
             <Route path="/profile"       element={<ProfilePage />} />
-            <Route path="/matching"        element={<MatchRecommendations />} />
-            <Route path="/resource-finder" element={<ResourceFinder />} />
-            <Route path="/notifications"   element={<NotificationCenter />} />
           </Route>
 
           {/* Admin only */}
           <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
-          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />

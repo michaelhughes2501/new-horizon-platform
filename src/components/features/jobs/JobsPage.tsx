@@ -14,6 +14,8 @@ import {
   Modal,
   Field,
   inputStyle,
+  TextInput,
+  TextArea,
 } from '@components/ui';
 import type { Job, JobApplicationForm } from '@apptypes/app';
 
@@ -35,13 +37,15 @@ export default function JobsPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    jobApi.getAll({ search }).then(({ data, error }) => {
+    async function load() {
+      setLoading(true);
+      const { data, error } = await jobApi.getAll({ search });
       if (!active) return;
       if (error) setError(error);
       else { setError(null); setJobs(data ?? []); }
       setLoading(false);
-    });
+    }
+    load();
     return () => { active = false; };
   }, [search]);
 
@@ -145,30 +149,26 @@ export default function JobsPage() {
         title={applyJob ? `Apply — ${applyJob.title}` : 'Apply'}
       >
         <Field label="Full name">
-          <input
-            style={inputStyle}
+          <TextInput
             value={form.name}
             onChange={e => setForm({ ...form, name: e.target.value })}
           />
         </Field>
         <Field label="Email">
-          <input
-            style={inputStyle}
+          <TextInput
             type="email"
             value={form.email}
             onChange={e => setForm({ ...form, email: e.target.value })}
           />
         </Field>
         <Field label="Phone">
-          <input
-            style={inputStyle}
+          <TextInput
             value={form.phone}
             onChange={e => setForm({ ...form, phone: e.target.value })}
           />
         </Field>
         <Field label="Short introduction">
-          <textarea
-            style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }}
+          <TextArea
             value={form.intro}
             onChange={e => setForm({ ...form, intro: e.target.value })}
           />
