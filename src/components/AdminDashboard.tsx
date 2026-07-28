@@ -169,7 +169,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, trend }) => (
 );
 
 interface ActivityItem {
-  type: 'message' | 'post' | string;
+  type: string;
   user: string;
   action: string;
   timestamp: string;
