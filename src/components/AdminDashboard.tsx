@@ -68,10 +68,10 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Tab Navigation */}
       <div className="flex gap-4 mb-8 border-b">
-        {['overview', 'users', 'activity'].map((t) => (
+        {(['overview', 'users', 'activity'] as const).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t as any)}
+            onClick={() => setTab(t)}
             className={`px-4 py-2 font-semibold ${
               tab === t
                 ? 'border-b-2 border-blue-600 text-blue-600'
@@ -165,8 +165,15 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, trend }) => (
   </div>
 );
 
+interface ActivityItem {
+  type: 'message' | 'post' | string;
+  user: string;
+  action: string;
+  timestamp: string;
+}
+
 const ActivityFeed: React.FC = () => {
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
 
   useEffect(() => {
     const fetchActivity = async () => {
