@@ -17,7 +17,11 @@ export const hash = (str: string): string => {
 
 // ── Password hashing ──────────────────────────────────────────
 // Production: use bcrypt via Edge Function, never client-side.
-export const genSalt    = (): string => Math.random().toString(36).slice(2, 18);
+export const genSalt    = (): string => {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+};
 export const hashPw     = (pw: string, salt: string): string =>
   hash(salt + pw + 'nh_secret_2025');
 
