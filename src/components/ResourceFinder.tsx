@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import Security from '@lib/security';
 
 interface Resource {
   id?: string;
@@ -246,9 +247,11 @@ interface ResourceCardProps {
   resource: Resource;
 }
 
-const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => (
+const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
+  const safeUrl = Security.isSafeUrl(resource.url) ? resource.url : '#';
+  return (
   <a
-    href={resource.url}
+    href={safeUrl}
     target="_blank"
     rel="noopener noreferrer"
     className="block bg-white border rounded-lg p-6 hover:shadow-lg transition-shadow"
@@ -276,6 +279,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => (
       ))}
     </div>
   </a>
-);
+  );
+};
 
 export default ResourceFinder;

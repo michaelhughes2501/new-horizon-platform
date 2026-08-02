@@ -25,6 +25,13 @@ interface User {
   matches: number;
 }
 
+interface Activity {
+  type: string;
+  user: string;
+  action: string;
+  timestamp: string;
+}
+
 export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -39,6 +46,10 @@ export const AdminDashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/dashboard/stats');
+      if (!res.ok) {
+        console.error(`Failed to fetch stats: ${res.status}`);
+        return;
+      }
       const data = await res.json();
       setStats(data);
     } catch (error) {
@@ -51,6 +62,10 @@ export const AdminDashboard: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/dashboard/users?page=1&per_page=10');
+      if (!res.ok) {
+        console.error(`Failed to fetch users: ${res.status}`);
+        return;
+      }
       const data = await res.json();
       setUsers(data.users);
     } catch (error) {
@@ -71,7 +86,7 @@ export const AdminDashboard: React.FC = () => {
         {['overview', 'users', 'activity'].map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t as any)}
+            onClick={() => setTab(t as 'overview' | 'users' | 'activity')}
             className={`px-4 py-2 font-semibold ${
               tab === t
                 ? 'border-b-2 border-blue-600 text-blue-600'
@@ -166,12 +181,16 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, trend }) => (
 );
 
 const ActivityFeed: React.FC = () => {
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   useEffect(() => {
     const fetchActivity = async () => {
       try {
         const res = await fetch('/api/dashboard/activity-log?limit=20');
+        if (!res.ok) {
+          console.error(`Failed to fetch activity: ${res.status}`);
+          return;
+        }
         const data = await res.json();
         setActivities(data);
       } catch (error) {

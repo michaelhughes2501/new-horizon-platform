@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Security from '@lib/security';
 
 interface Notification {
   id: string;
@@ -89,8 +90,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       };
 
       ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        addNotification(data.type, data.title, data.description, data.link);
+        try {
+          const data = JSON.parse(event.data as string);
+          if (data && typeof data.type === 'string' && typeof data.title === 'string' && typeof data.description === 'string') {
+            const safeLink = typeof data.link === 'string' && Security.isSafeUrl(data.link) ? data.link : undefined;
+            addNotification(data.type as Notification['type'], data.title, data.description, safeLink);
+          }
+        } catch {
+          // ignore malformed WebSocket frames
+        }
       };
 
       ws.onerror = (error) => {
@@ -162,7 +170,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   const handleClick = () => {
     onRead();
-    if (notification.link) {
+    if (notification.link && Security.isSafeUrl(notification.link)) {
       window.location.href = notification.link;
     }
   };

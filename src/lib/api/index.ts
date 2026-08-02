@@ -69,7 +69,7 @@ export const authApi = {
 
   async getSession(): Promise<ApiResponse<Profile>> {
     const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) return { data: null, error: null };
+    if (error || !data.session?.user?.id) return { data: null, error: null };
     return profileApi.getById(data.session.user.id);
   },
 
@@ -338,7 +338,8 @@ export const jobApi = {
       query = query.eq('job_type', filters.type.toLowerCase());
     }
     if (filters.search) {
-      const q = Security.sanitise(filters.search, 100);
+      // Strip characters that are special in PostgREST filter syntax to prevent filter injection
+      const q = Security.sanitise(filters.search, 100).replace(/[,%()\\]/g, '');
       query = query.or(`title.ilike.%${q}%,company.ilike.%${q}%`);
     }
 
@@ -598,8 +599,12 @@ export const calculatorApi = {
       sentence_years:   input.sentenceYears,
       offense_type:     input.offenseType,
       start_date:       input.startDate,
-      earliest_release: (result.earliestRelease as Date).toISOString().split('T')[0],
-      latest_release:   (result.latestRelease as Date).toISOString().split('T')[0],
+      earliest_release: result.earliestRelease instanceof Date
+        ? result.earliestRelease.toISOString().split('T')[0]
+        : String(result.earliestRelease ?? '').split('T')[0],
+      latest_release:   result.latestRelease instanceof Date
+        ? result.latestRelease.toISOString().split('T')[0]
+        : String(result.latestRelease ?? '').split('T')[0],
       pct_served:       result.percentServed,
     })).catch(() => {});
   },

@@ -21,10 +21,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore session on mount
   useEffect(() => {
-    authApi.getSession().then(({ data }) => {
-      setUser(data);
-      setLoading(false);
-    });
+    authApi.getSession()
+      .then(({ data }) => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, []);
 
   // Heartbeat — update last_seen every 5 minutes

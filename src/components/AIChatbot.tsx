@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import Security from '@lib/security';
 
 interface Message {
   id: string;
@@ -45,10 +46,13 @@ export const AIChatbot: React.FC<ChatbotProps> = ({
     e.preventDefault();
     if (!input.trim()) return;
 
+    const cleanInput = Security.sanitise(input, 2000);
+    if (!cleanInput) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: cleanInput,
       timestamp: new Date(),
     };
 
@@ -60,7 +64,7 @@ export const AIChatbot: React.FC<ChatbotProps> = ({
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input, context }),
+        body: JSON.stringify({ message: cleanInput, context }),
       });
 
       const data = await response.json();
