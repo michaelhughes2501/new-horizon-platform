@@ -10,9 +10,7 @@ export {
   EmptyState,
   PageHeader,
   Field,
-  inputStyle,
-  focusRingStyle,
-  blurRingStyle,
   TextInput,
   TextArea,
 } from './primitives';
+export { inputStyle, focusRingStyle, blurRingStyle } from './inputStyles';
