@@ -1,9 +1,11 @@
 /**
- * AI Chatbot Component
- * Provides intelligent support and recommendations
+ * AI Chatbot — floating support widget.
+ * Rendered once, globally, inside <AppLayout> for every authenticated page.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { C, fonts, radii, shadows } from '@styles/tokens';
+import { useToast } from '@context/ToastContext';
 import Security from '@lib/security';
 
 interface Message {
@@ -15,36 +17,30 @@ interface Message {
 
 interface ChatbotProps {
   context?: 'general' | 'support' | 'matching' | 'resources';
-  onClose?: () => void;
 }
 
-export const AIChatbot: React.FC<ChatbotProps> = ({
-  context = 'general',
-  onClose,
-}) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hi! I\'m here to help. How can I assist you today?',
-      timestamp: new Date(),
-    },
-  ]);
+const WELCOME: Message = {
+  id: '1',
+  role: 'assistant',
+  content: "Hi! I'm here to help. How can I assist you today?",
+  timestamp: new Date(),
+};
+
+export const AIChatbot: React.FC<ChatbotProps> = ({ context = 'general' }) => {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (open) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, open]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const cleanInput = Security.sanitise(input, 2000);
     if (!cleanInput) return;
@@ -56,7 +52,7 @@ export const AIChatbot: React.FC<ChatbotProps> = ({
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
 
@@ -67,101 +63,182 @@ export const AIChatbot: React.FC<ChatbotProps> = ({
         body: JSON.stringify({ message: cleanInput, context }),
       });
 
+      if (!response.ok) throw new Error(`Chat request failed (${response.status})`);
       const data = await response.json();
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.reply || 'I encountered an error. Please try again.',
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `${Date.now()}-a`,
+          role: 'assistant',
+          content: data.reply || "I couldn't come up with a reply — try rephrasing that?",
+          timestamp: new Date(),
+        },
+      ]);
     } catch (error) {
       console.error('Error sending message:', error);
+      toast('The assistant is unavailable right now.', 'error');
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `${Date.now()}-a`,
+          role: 'assistant',
+          content: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-[600px] bg-white rounded-lg shadow-lg">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 flex justify-between items-center">
-        <h3 className="font-bold text-lg">AI Assistant</h3>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="text-white hover:bg-blue-700 p-1 rounded"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
+    <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 9500 }}>
+      {open && (
+        <div
+          style={{
+            width: 340,
+            height: 460,
+            marginBottom: 14,
+            background: C.white,
+            borderRadius: radii['2xl'],
+            boxShadow: shadows['2xl'],
+            border: `1px solid ${C.mist}`,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            animation: 'fadeIn .15s ease',
+          }}
+        >
+          {/* Header */}
           <div
-            key={message.id}
-            className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
+            style={{
+              background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`,
+              color: C.white,
+              padding: '14px 16px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
           >
-            <div
-              className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-blue-600 text-white rounded-br-none'
-                  : 'bg-gray-100 text-gray-900 rounded-bl-none'
-              }`}
+            <span style={{ fontFamily: fonts.display, fontSize: 17, fontWeight: 600 }}>
+              AI Assistant
+            </span>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Close chat"
+              style={{
+                color: C.white,
+                fontSize: 18,
+                lineHeight: 1,
+                padding: 4,
+                borderRadius: radii.full,
+                transition: 'background .12s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <p className="text-sm">{message.content}</p>
-              <p
-                className={`text-xs mt-1 ${
-                  message.role === 'user'
-                    ? 'text-blue-100'
-                    : 'text-gray-500'
-                }`}
-              >
-                {message.timestamp.toLocaleTimeString()}
-              </p>
-            </div>
+              ✕
+            </button>
           </div>
-        ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg rounded-bl-none">
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
 
-      {/* Input */}
-      <form onSubmit={handleSendMessage} className="border-t p-4">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            disabled={loading}
-            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-100"
-          />
-          <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+          {/* Messages */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {messages.map(message => (
+              <div
+                key={message.id}
+                style={{ display: 'flex', justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start' }}
+              >
+                <div
+                  style={{
+                    maxWidth: '80%',
+                    padding: '8px 12px',
+                    borderRadius: 12,
+                    fontSize: 13,
+                    background: message.role === 'user' ? C.gold : C.cream,
+                    color: message.role === 'user' ? C.white : C.charcoal,
+                  }}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <div style={{ background: C.cream, color: C.slate, padding: '8px 12px', borderRadius: 12, fontSize: 13 }}>
+                  …
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <form
+            onSubmit={handleSendMessage}
+            style={{ display: 'flex', gap: 8, padding: 12, borderTop: `1px solid ${C.mist}`, flexShrink: 0 }}
           >
-            Send
-          </button>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Type your message…"
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: '9px 12px',
+                borderRadius: radii.md,
+                border: `1px solid ${C.mist}`,
+                background: C.ivory,
+                color: C.charcoal,
+                fontFamily: fonts.body,
+                fontSize: 13,
+                outline: 'none',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              style={{
+                padding: '9px 16px',
+                borderRadius: radii.md,
+                background: C.gold,
+                color: C.white,
+                fontSize: 13,
+                fontWeight: 500,
+                opacity: loading || !input.trim() ? 0.55 : 1,
+                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Send
+            </button>
+          </form>
         </div>
-      </form>
+      )}
+
+      {/* Floating toggle button */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label={open ? 'Close AI assistant' : 'Open AI assistant'}
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: `linear-gradient(135deg, ${C.gold}, ${C.goldLight})`,
+          color: C.white,
+          fontSize: 24,
+          boxShadow: shadows.xl,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginLeft: 'auto',
+          transition: 'transform .12s ease',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+      >
+        {open ? '✕' : '✦'}
+      </button>
     </div>
   );
 };
