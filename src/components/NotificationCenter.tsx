@@ -29,6 +29,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Remove notification
+  const removeNotification = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
   // Add notification
   const addNotification = useCallback(
     (
@@ -57,13 +62,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         }, autoClose);
       }
     },
-    [autoClose, maxNotifications]
+    [autoClose, maxNotifications, removeNotification]
   );
-
-  // Remove notification
-  const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
 
   // Mark as read
   const markAsRead = useCallback((id: string) => {
