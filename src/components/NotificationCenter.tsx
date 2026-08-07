@@ -3,7 +3,7 @@
  * Provides instant updates for messages, matches, and more
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Security from '@lib/security';
 
 interface Notification {
@@ -27,7 +27,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   maxNotifications = 5,
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
   const autoCloseTimeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   // Clear any pending auto-close timeouts on unmount so they don't fire
@@ -42,13 +45,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   // Remove notification
   const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => {
-      const target = prev.find((n) => n.id === id);
-      if (target && !target.read) {
-        setUnreadCount((count) => Math.max(0, count - 1));
-      }
-      return prev.filter((n) => n.id !== id);
-    });
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
   // Add notification
@@ -71,7 +68,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       };
 
       setNotifications((prev) => [notification, ...prev].slice(0, maxNotifications));
-      setUnreadCount((prev) => prev + 1);
 
       if (autoClose) {
         const timeoutId = setTimeout(() => {
@@ -91,7 +87,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         n.id === id ? { ...n, read: true } : n
       )
     );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
   }, []);
 
   // WebSocket connection for real-time notifications
