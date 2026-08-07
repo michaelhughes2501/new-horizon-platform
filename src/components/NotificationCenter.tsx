@@ -3,7 +3,7 @@
  * Provides instant updates for messages, matches, and more
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Security from '@lib/security';
 
 interface Notification {
@@ -28,6 +28,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const autoCloseTimeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  // Clear any pending auto-close timeouts on unmount so they don't fire
+  // removeNotification (and its setState calls) after the component is gone.
+  useEffect(() => {
+    const timeouts = autoCloseTimeoutsRef.current;
+    return () => {
+      timeouts.forEach(clearTimeout);
+      timeouts.clear();
+    };
+  }, []);
 
   // Remove notification
   const removeNotification = useCallback((id: string) => {
@@ -57,9 +68,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       setUnreadCount((prev) => prev + 1);
 
       if (autoClose) {
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
+          autoCloseTimeoutsRef.current.delete(timeoutId);
           removeNotification(id);
         }, autoClose);
+        autoCloseTimeoutsRef.current.add(timeoutId);
       }
     },
     [autoClose, maxNotifications, removeNotification]
