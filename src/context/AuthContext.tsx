@@ -33,12 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Heartbeat — update last_seen every 5 minutes
   useEffect(() => {
-    if (!user) return;
+    const userId = user?.id;
+    if (!userId) return;
     const interval = setInterval(() => {
-      profileApi.updateLastSeen(user.id).catch(() => {});
+      profileApi.updateLastSeen(userId).catch(() => {});
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user?.id]);
 
   const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
     const { data, error } = await authApi.signIn(email, password);
@@ -61,10 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    if (!user) return;
-    const { data } = await profileApi.getById(user.id);
+    const userId = user?.id;
+    if (!userId) return;
+    const { data } = await profileApi.getById(userId);
     if (data) setUser(data);
-  }, [user]);
+  }, [user?.id]);
 
   return (
     <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, refreshUser }}>

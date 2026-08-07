@@ -42,7 +42,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   // Remove notification
   const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) => {
+      const target = prev.find((n) => n.id === id);
+      if (target && !target.read) {
+        setUnreadCount((count) => Math.max(0, count - 1));
+      }
+      return prev.filter((n) => n.id !== id);
+    });
   }, []);
 
   // Add notification
